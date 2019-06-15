@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+
+logs
+*.log
+*.h5

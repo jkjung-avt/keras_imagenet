@@ -27,7 +27,7 @@ I myself have tested all steps belowe with tensorflow-1.12.2.
    -rwxr-xr-x 1 jkjung jkjung   6744924160 Nov  7  2018 ILSVRC2012_img_val.tar
    ```
 
-2. Untar the 'train' and 'val' files.  I put the untarred files at ${HOME}/data/ILSVRC2012/.
+2. Untar the 'train' and 'val' files.  For example, I put the untarred files at ${HOME}/data/ILSVRC2012/.
 
    ```shell
    $ mkdir -p ${HOME}/data/ILSVRC2012
@@ -41,8 +41,8 @@ I myself have tested all steps belowe with tensorflow-1.12.2.
          rm -f "${NAME}"; \
      done
    $ cd ..
-   $ mkdir val
-   $ cd val
+   $ mkdir validation
+   $ cd validation
    $ tar xvf ${HOME}/Downloads/ILSVRC2012_img_val.tar
    ```
 
@@ -63,7 +63,7 @@ I myself have tested all steps belowe with tensorflow-1.12.2.
              imagenet_2012_validation_synset_labels.txt
    ```
 
-5. Build tfrecords files for both 'train' and 'validation'.  (This could takes a couple of hours, since there are 1,281,167 training images in total.)
+5. Build TFRecord files for 'train' and 'validation'.  (This step could takes a couple of hours, since there are 1,281,167 training images in total.)
 
    ```shell
    $ mkdir ${HOME}/data/ILSVRC2012/tfrecords
@@ -73,5 +73,5 @@ I myself have tested all steps belowe with tensorflow-1.12.2.
              --validation_directory ${HOME}/data/ILSVRC2012/validation 
    ```
 
-6. Training MobileNet v2.  To be contimued...
+6. Training MobileNet v2.  To be continued...
 

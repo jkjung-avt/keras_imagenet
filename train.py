@@ -13,7 +13,9 @@ import time
 import tensorflow as tf
 
 
-BATCH_SIZE = 128
+NUM_DATA_WORKERS = 4
+BATCH_SIZE = 16
+EPOCHS = 1
 
 
 def config_keras_backend():
@@ -76,7 +78,7 @@ def resize_image(image, height, width, scope=None):
         return image
 
 
-def parse_example_proto(example_serialized):
+def parse_fn(example_serialized):
     """Parses an Example proto containing a training example of an image.
 
     Each Example proto (TFRecord) contains the following fields:
@@ -105,32 +107,34 @@ def parse_example_proto(example_serialized):
     feature_map = {
         'image/encoded': tf.FixedLenFeature([], dtype=tf.string,
                                             default_value=''),
-        'image/class/label': tf.FixedLenFeature([1], dtype=tf.int64,
+        'image/class/label': tf.FixedLenFeature([], dtype=tf.int64,
                                                 default_value=-1),
         'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
                                                default_value=''),
     }
-    features = tf.parse_single_example(example_serialized, feature_map)
-    image = decode_jpeg(features['image/encoded'])
+    parsed = tf.parse_single_example(example_serialized, feature_map)
+    image = decode_jpeg(parsed['image/encoded'])
     image = resize_image(image, 224, 224)
     # rescale to [-1,1]
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0)
-    label = tf.cast(features['image/class/label'], dtype=tf.int32)
-    #return image, label, features['image/class/text']
+    label = tf.one_hot(parsed['image/class/label'], 1000, dtype=tf.float32)
     return (image, label)
 
 
 def get_dataset(tfrecords_dir, subset):
     """Read TFRecords files and turn them into a TFRecordDataset."""
-    pattern = os.path.join(tfrecords_dir, '%s-*' % subset)
-    data_files = tf.gfile.Glob(pattern)
-    if not data_files:
-        sys.exit('No files found for %s!' % subset)
-    dataset = tf.data.TFRecordDataset(data_files)
-    dataset.map(parse_example_proto)
-    dataset.shuffle(buffer_size=4096)
-    dataset.batch(BATCH_SIZE)
+    files = tf.matching_files(os.path.join(tfrecords_dir, '%s-*' % subset))
+    shards = tf.data.Dataset.from_tensor_slices(files)
+    shards = shards.shuffle(tf.cast(tf.shape(files)[0], tf.int64))
+    dataset = shards.interleave(tf.data.TFRecordDataset, cycle_length=4)
+    dataset = dataset.shuffle(buffer_size=8192)
+    dataset = dataset.apply(
+        tf.data.experimental.map_and_batch(
+            map_func=parse_fn,
+            batch_size=BATCH_SIZE,
+            num_parallel_calls=NUM_DATA_WORKERS))
+    dataset = dataset.prefetch(BATCH_SIZE)
     return dataset
 
 
@@ -161,9 +165,9 @@ def main():
         validation_data=ds_validation,
         validation_steps=50000 // BATCH_SIZE,
         callbacks=[model_checkpoint, tensorboard],
-        use_multiprocessing=True,
-        workers=4,
-        epochs=100)
+        # The following doesn't seem to help.
+        # use_multiprocessing=True, workers=4,
+        epochs=EPOCHS)
 
     # save the trained model
     model.save('model-final.h5')

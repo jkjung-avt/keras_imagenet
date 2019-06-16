@@ -3,4 +3,6 @@ __pycache__/
 
 logs
 *.log
+
+saves
 *.h5

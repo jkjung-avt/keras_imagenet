@@ -14,6 +14,7 @@ import argparse
 import tensorflow as tf
 
 from config import config
+from utils.image_processing import preprocess_image
 from models.models import get_training_model
 
 
@@ -52,7 +53,7 @@ def decode_jpeg(image_buffer, scope=None):
         return image
 
 
-def resize_image(image, height, width, scope=None):
+def resize_and_rescale_image(image, height, width, scope=None):
     """Prepare one image for training/evaluation.
 
     Args:
@@ -65,20 +66,18 @@ def resize_image(image, height, width, scope=None):
     """
     with tf.name_scope(values=[image, height, width], name=scope,
                        default_name='resize_image'):
-        # Crop the central region of the image with an area containing
-        # 87.5% of the original image.
-        #image = tf.image.central_crop(image, central_fraction=0.875)
-
-        # Resize the image to the original height and width.
         image = tf.expand_dims(image, 0)
         image = tf.image.resize_bilinear(image, [height, width],
                                          align_corners=False)
         image = tf.squeeze(image, [0])
-        return image
+        # rescale to [-1,1]
+        image = tf.subtract(image, 0.5)
+        image = tf.multiply(image, 2.0)
+    return image
 
 
-def parse_fn(example_serialized):
-    """Parses an Example proto containing a training example of an image.
+def _parse_fn(example_serialized, is_training):
+    """Helper function for parse_fn_train() and parse_fn_valid()
 
     Each Example proto (TFRecord) contains the following fields:
 
@@ -113,12 +112,20 @@ def parse_fn(example_serialized):
     }
     parsed = tf.parse_single_example(example_serialized, feature_map)
     image = decode_jpeg(parsed['image/encoded'])
-    image = resize_image(image, 224, 224)
-    # rescale to [-1,1]
-    image = tf.subtract(image, 0.5)
-    image = tf.multiply(image, 2.0)
+    #image = resize_and_rescale_image(image, 224, 224)
+    image = preprocess_image(image, 224, 224, is_training=is_training)
     label = tf.one_hot(parsed['image/class/label'], 1000, dtype=tf.float32)
     return (image, label)
+
+
+def parse_fn_train(example_serialized):
+    """Parses an Example proto containing a training image."""
+    return _parse_fn(example_serialized, is_training=True)
+
+
+def parse_fn_valid(example_serialized):
+    """Parses an Example proto containing a validation image."""
+    return _parse_fn(example_serialized, is_training=False)
 
 
 def get_dataset(tfrecords_dir, subset):
@@ -129,9 +136,10 @@ def get_dataset(tfrecords_dir, subset):
     shards = shards.repeat()
     dataset = shards.interleave(tf.data.TFRecordDataset, cycle_length=4)
     dataset = dataset.shuffle(buffer_size=8192)
+    parser = parse_fn_train if subset == 'train' else parse_fn_valid
     dataset = dataset.apply(
         tf.data.experimental.map_and_batch(
-            map_func=parse_fn,
+            map_func=parser,
             batch_size=config.BATCH_SIZE,
             num_parallel_calls=config.NUM_DATA_WORKERS))
     dataset = dataset.prefetch(config.BATCH_SIZE)

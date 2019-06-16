@@ -73,5 +73,9 @@ I myself have tested all steps belowe with tensorflow-1.12.2.
              --validation_directory ${HOME}/data/ILSVRC2012/validation 
    ```
 
-6. Training MobileNet v2.  To be continued...
+6. Training MobileNet v2.
+
+   ```shell
+   $ python3 train.py mobilenet_v2
+   ```
 

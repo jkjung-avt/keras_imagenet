@@ -20,11 +20,5 @@ config.BATCH_SIZE = 64
 # Accumulate gradients and do an update for this many iterations
 config.ITER_SIZE = 4
 
-# Initial learning rate
-config.INITIAL_LR = 4e-4
-
-# Learning rate decay
-config.LR_DECAY = 1e-6
-
 # Total number of epochs for training
 config.EPOCHS = 3

@@ -14,11 +14,7 @@ import argparse
 import tensorflow as tf
 
 from config import config
-from utils.optimizer import convert_to_accum_optimizer
-
-
-# Constants
-
+from models.models import get_training_model
 
 
 def config_keras_backend():
@@ -133,9 +129,6 @@ def get_dataset(tfrecords_dir, subset):
     shards = shards.repeat()
     dataset = shards.interleave(tf.data.TFRecordDataset, cycle_length=4)
     dataset = dataset.shuffle(buffer_size=8192)
-    #dataset = dataset.apply(
-    #    tf.data.experimental.shuffle_and_repeat(
-    #        buffer_size=8192))
     dataset = dataset.apply(
         tf.data.experimental.map_and_batch(
             map_func=parse_fn,
@@ -143,27 +136,6 @@ def get_dataset(tfrecords_dir, subset):
             num_parallel_calls=config.NUM_DATA_WORKERS))
     dataset = dataset.prefetch(config.BATCH_SIZE)
     return dataset
-
-
-def get_training_model(model_name):
-    """Build the model to be trained."""
-    if model_name == 'mobilenet_v2':
-        model = tf.keras.applications.mobilenet_v2.MobileNetV2(
-            include_top=True,
-            weights=None,
-            classes=1000)
-        optimizer = convert_to_accum_optimizer(
-            tf.keras.optimizers.Adam(lr=config.INITIAL_LR, decay=config.LR_DECAY),
-            config.ITER_SIZE)
-        model.compile(
-            optimizer=optimizer,
-            loss='categorical_crossentropy',
-            metrics=['accuracy'])
-    else:
-        raise ValueError
-
-    print(model.summary())
-    return model
 
 
 def train(model_name):
@@ -190,7 +162,7 @@ def train(model_name):
         # The following doesn't seem to help.
         # use_multiprocessing=True, workers=4,
         epochs=config.EPOCHS)
-
+    # training finished
     model.save('{}/{}-model-final.h5'.format(config.SAVE_DIR, model_name))
 
 

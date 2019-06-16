@@ -17,9 +17,9 @@ def convert_to_accum_optimizer(orig_optimizer, iter_size, do_mean=False):
         iter_size: accumulate gradients for this meany iterations
         do_mean: use mean (average) grandient instead of sum
     """
-    if K.backend != 'tensorflow':
-        raise TypeError('convert_to_accum_optimizer() only supports'
-                        'tensorflow backend!')
+    if K.backend() != 'tensorflow':
+        raise RuntimeError('convert_to_accum_optimizer() only supports '
+                           'tensorflow backend!')
     if iter_size < 1:
         raise ValueError('iter_size must be >= 1')
     orig_get_gradients = orig_optimizer.get_gradients

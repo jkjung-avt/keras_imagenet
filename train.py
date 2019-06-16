@@ -8,14 +8,17 @@ Example usage:
 
 
 import os
-import sys
 import time
+import argparse
+
 import tensorflow as tf
 
+from config import config
+from utils.optimizer import convert_to_accum_optimizer
 
-NUM_DATA_WORKERS = 4
-BATCH_SIZE = 16
-EPOCHS = 1
+
+# Constants
+
 
 
 def config_keras_backend():
@@ -127,50 +130,78 @@ def get_dataset(tfrecords_dir, subset):
     files = tf.matching_files(os.path.join(tfrecords_dir, '%s-*' % subset))
     shards = tf.data.Dataset.from_tensor_slices(files)
     shards = shards.shuffle(tf.cast(tf.shape(files)[0], tf.int64))
+    shards = shards.repeat()
     dataset = shards.interleave(tf.data.TFRecordDataset, cycle_length=4)
     dataset = dataset.shuffle(buffer_size=8192)
+    #dataset = dataset.apply(
+    #    tf.data.experimental.shuffle_and_repeat(
+    #        buffer_size=8192))
     dataset = dataset.apply(
         tf.data.experimental.map_and_batch(
             map_func=parse_fn,
-            batch_size=BATCH_SIZE,
-            num_parallel_calls=NUM_DATA_WORKERS))
-    dataset = dataset.prefetch(BATCH_SIZE)
+            batch_size=config.BATCH_SIZE,
+            num_parallel_calls=config.NUM_DATA_WORKERS))
+    dataset = dataset.prefetch(config.BATCH_SIZE)
     return dataset
 
 
-def main():
-    config_keras_backend()
+def get_training_model(model_name):
+    """Build the model to be trained."""
+    if model_name == 'mobilenet_v2':
+        model = tf.keras.applications.mobilenet_v2.MobileNetV2(
+            include_top=True,
+            weights=None,
+            classes=1000)
+        optimizer = convert_to_accum_optimizer(
+            tf.keras.optimizers.Adam(lr=config.INITIAL_LR, decay=config.LR_DECAY),
+            config.ITER_SIZE)
+        model.compile(
+            optimizer=optimizer,
+            loss='categorical_crossentropy',
+            metrics=['accuracy'])
+    else:
+        raise ValueError
 
+    print(model.summary())
+    return model
+
+
+def train(model_name):
+    """Prepare data and train the model."""
     ds_train = get_dataset(
         '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'train')
     ds_validation = get_dataset(
         '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'validation')
 
-    model = tf.keras.applications.mobilenet_v2.MobileNetV2(
-        include_top=True, weights=None, classes=1000)
-    model.compile(
-        optimizer=tf.keras.optimizers.Adam(lr=1e-4),
-        loss='categorical_crossentropy', metrics=['accuracy'])
-    print(model.summary())
-
     model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
-        'chkpt-{epoch:03d}.h5', monitor='val_loss', save_best_only=True)
+        '{}/{}'.format(config.SAVE_DIR, model_name) + '-ckpt-{epoch:03d}.h5',
+        monitor='val_loss',
+        save_best_only=True)
     tensorboard = tf.keras.callbacks.TensorBoard(
-        log_dir='./logs/{}'.format(time.time()))
+        log_dir='{}/{}'.format(config.LOG_DIR, time.time()))
 
-    # train the model
+    model = get_training_model(model_name)
     model.fit(
         x=ds_train,
-        steps_per_epoch=1281167 // BATCH_SIZE,
+        steps_per_epoch=1281167 // config.BATCH_SIZE,
         validation_data=ds_validation,
-        validation_steps=50000 // BATCH_SIZE,
+        validation_steps=50000 // config.BATCH_SIZE,
         callbacks=[model_checkpoint, tensorboard],
         # The following doesn't seem to help.
         # use_multiprocessing=True, workers=4,
-        epochs=EPOCHS)
+        epochs=config.EPOCHS)
 
-    # save the trained model
-    model.save('model-final.h5')
+    model.save('{}/{}-model-final.h5'.format(config.SAVE_DIR, model_name))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('model', type=str)
+    args = parser.parse_args()
+    os.makedirs(config.SAVE_DIR, exist_ok=True)
+    os.makedirs(config.LOG_DIR, exist_ok=True)
+    config_keras_backend()
+    train(args.model)
 
 
 if __name__ == '__main__':

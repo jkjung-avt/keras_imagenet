@@ -13,12 +13,3 @@ config.LOG_DIR = 'logs'
 
 # Number of parallel works for generating training/validation data
 config.NUM_DATA_WORKERS = 4
-
-# Batch size for each iteration
-config.BATCH_SIZE = 64
-
-# Accumulate gradients and do an update for this many iterations
-config.ITER_SIZE = 4
-
-# Total number of epochs for training
-config.EPOCHS = 3

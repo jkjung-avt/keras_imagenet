@@ -15,7 +15,12 @@ import tensorflow as tf
 
 from config import config
 from utils.image_processing import preprocess_image
+from models.models import get_batch_size, get_iter_size
+from models.models import get_initial_lr, get_lr_decay
 from models.models import get_training_model
+
+
+DATA_AUGMENTATION = True
 
 
 def config_keras_backend():
@@ -112,8 +117,10 @@ def _parse_fn(example_serialized, is_training):
     }
     parsed = tf.parse_single_example(example_serialized, feature_map)
     image = decode_jpeg(parsed['image/encoded'])
-    #image = resize_and_rescale_image(image, 224, 224)
-    image = preprocess_image(image, 224, 224, is_training=is_training)
+    if DATA_AUGMENTATION:
+        image = preprocess_image(image, 224, 224, is_training=is_training)
+    else:
+        image = resize_and_rescale_image(image, 224, 224)
     label = tf.one_hot(parsed['image/class/label'], 1000, dtype=tf.float32)
     return (image, label)
 
@@ -128,7 +135,7 @@ def parse_fn_valid(example_serialized):
     return _parse_fn(example_serialized, is_training=False)
 
 
-def get_dataset(tfrecords_dir, subset):
+def get_dataset(tfrecords_dir, subset, batch_size):
     """Read TFRecords files and turn them into a TFRecordDataset."""
     files = tf.matching_files(os.path.join(tfrecords_dir, '%s-*' % subset))
     shards = tf.data.Dataset.from_tensor_slices(files)
@@ -140,18 +147,22 @@ def get_dataset(tfrecords_dir, subset):
     dataset = dataset.apply(
         tf.data.experimental.map_and_batch(
             map_func=parser,
-            batch_size=config.BATCH_SIZE,
+            batch_size=batch_size,
             num_parallel_calls=config.NUM_DATA_WORKERS))
-    dataset = dataset.prefetch(config.BATCH_SIZE)
+    dataset = dataset.prefetch(batch_size)
     return dataset
 
 
-def train(model_name):
+def train(model_name, batch_size, iter_size, initial_lr, lr_decay, epochs):
     """Prepare data and train the model."""
+    batch_size = get_batch_size(model_name, batch_size)
+    iter_size = get_iter_size(model_name, iter_size)
+    initial_lr = get_initial_lr(model_name, initial_lr)
+    lr_decay = get_lr_decay(model_name, lr_decay)
     ds_train = get_dataset(
-        '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'train')
+        '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'train', batch_size)
     ds_validation = get_dataset(
-        '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'validation')
+        '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'validation', batch_size)
 
     model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
         '{}/{}'.format(config.SAVE_DIR, model_name) + '-ckpt-{epoch:03d}.h5',
@@ -160,28 +171,36 @@ def train(model_name):
     tensorboard = tf.keras.callbacks.TensorBoard(
         log_dir='{}/{}'.format(config.LOG_DIR, time.time()))
 
-    model = get_training_model(model_name)
+    model = get_training_model(model_name, iter_size, initial_lr, lr_decay)
     model.fit(
         x=ds_train,
-        steps_per_epoch=1281167 // config.BATCH_SIZE,
+        steps_per_epoch=1281167 // batch_size,
         validation_data=ds_validation,
-        validation_steps=50000 // config.BATCH_SIZE,
+        validation_steps=50000 // batch_size,
         callbacks=[model_checkpoint, tensorboard],
         # The following doesn't seem to help.
         # use_multiprocessing=True, workers=4,
-        epochs=config.EPOCHS)
+        epochs=epochs)
     # training finished
     model.save('{}/{}-model-final.h5'.format(config.SAVE_DIR, model_name))
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('model', type=str)
+    parser.add_argument('--batch_size', type=int, default=-1)
+    parser.add_argument('--iter_size', type=int, default=-1)
+    parser.add_argument('--initial_lr', type=float, default=-1.0)
+    parser.add_argument('--lr_decay', type=float, default=-1.0)
+    parser.add_argument('--epochs', type=int, default=1,
+                        help='number of epochs for training [1]')
+    parser.add_argument('model', type=str,
+                        help='mobilenet_v2 or resnet50')
     args = parser.parse_args()
     os.makedirs(config.SAVE_DIR, exist_ok=True)
     os.makedirs(config.LOG_DIR, exist_ok=True)
     config_keras_backend()
-    train(args.model)
+    train(args.model, args.batch_size, args.iter_size,
+          args.initial_lr, args.lr_decay, args.epochs)
 
 
 if __name__ == '__main__':

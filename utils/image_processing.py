@@ -322,7 +322,11 @@ def preprocess_for_train(image,
   """
   with tf.name_scope(scope, 'distort_image', [image, height, width, bbox]):
     assert image.dtype == tf.float32
-    distorted_image, distorted_bbox = distorted_bounding_box_crop(image, bbox)
+    distorted_image, distorted_bbox = distorted_bounding_box_crop(
+        image,
+        bbox,
+        min_object_covered=0.25,
+        area_range=(0.25, 1.0))
     # Restore the shape since the dynamic slice based upon the bbox_size loses
     # the third dimension.
     distorted_image.set_shape([None, None, 3])

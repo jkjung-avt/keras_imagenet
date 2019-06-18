@@ -12,12 +12,26 @@ from config import config
 from utils.optimizer import convert_to_accum_optimizer
 
 
-def _get_model(model_func, initial_lr, lr_decay, iter_size):
+def _get_model(model_func, initial_lr, iter_size, weight_decay):
     """Build keras model."""
     model = model_func(include_top=True, weights=None, classes=1000)
+    # add L2 regularization, reference:
+    # https://jricheimer.github.io/keras/2019/02/06/keras-hack-1/
+    for layer in model.layers:
+        if isinstance(layer, tf.keras.layers.DepthwiseConv2D):
+            layer.add_loss(
+                tf.keras.regularizers.l2(weight_decay)(layer.depthwise_kernel))
+        elif isinstance(layer, tf.keras.layers.Conv2D) or isinstance(layer, tf.keras.layers.Dense):
+            layer.add_loss(
+                tf.keras.regularizers.l2(weight_decay)(layer.kernel))
+        elif isinstance(layer, tf.keras.layers.BatchNormalization):
+            layer.add_loss(
+                tf.keras.regularizers.l2(weight_decay)(layer.gamma))
+
     # TO-DO: add weight decay here
+    amsgrad = config.ADAM_USE_AMSGRAD
     optimizer = convert_to_accum_optimizer(
-        tf.keras.optimizers.Adam(lr=initial_lr, decay=lr_decay),
+        tf.keras.optimizers.Adam(lr=initial_lr, amsgrad=amsgrad),
         iter_size)
     model.compile(
         optimizer=optimizer,
@@ -56,21 +70,26 @@ def get_initial_lr(model_name, value):
     return value if value > 0 else 3e-4
 
 
-def get_lr_decay(model_name, value):
-    return value if value > 0 else 1e-6
+def get_final_lr(model_name, value):
+    return value if value > 0 else 1e-5
 
 
-def get_training_model(model_name, iter_size, initial_lr, lr_decay):
+def get_weight_decay(model_name, value):
+    return value if value > 0 else \
+           (1e-6 if 'mobilenet' in model_name else 1e-5)
+
+
+def get_training_model(model_name, iter_size, initial_lr, weight_decay):
     """Build the model to be trained."""
     if model_name == 'mobilenet_v2':
         model = _get_model(tf.keras.applications.mobilenet_v2.MobileNetV2,
-                           initial_lr, lr_decay, iter_size)
+                           initial_lr, iter_size, weight_decay)
     elif model_name == 'nasnet_mobile':
         model = _get_model(tf.keras.applications.nasnet.NASNetMobile,
-                           initial_lr, lr_decay, iter_size)
+                           initial_lr, iter_size, weight_decay)
     elif model_name == 'resnet50':
         model = _get_model(tf.keras.applications.resnet50.ResNet50,
-                           initial_lr, lr_decay, iter_size)
+                           initial_lr, iter_size, weight_decay)
     else:
         raise ValueError
     print(model.summary())

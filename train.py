@@ -16,11 +16,8 @@ import tensorflow as tf
 from config import config
 from utils.image_processing import preprocess_image
 from models.models import get_batch_size, get_iter_size
-from models.models import get_initial_lr, get_lr_decay
-from models.models import get_training_model
-
-
-DATA_AUGMENTATION = True
+from models.models import get_initial_lr, get_final_lr
+from models.models import get_weight_decay, get_training_model
 
 
 def config_keras_backend():
@@ -117,7 +114,7 @@ def _parse_fn(example_serialized, is_training):
     }
     parsed = tf.parse_single_example(example_serialized, feature_map)
     image = decode_jpeg(parsed['image/encoded'])
-    if DATA_AUGMENTATION:
+    if config.DATA_AUGMENTATION:
         image = preprocess_image(image, 224, 224, is_training=is_training)
     else:
         image = resize_and_rescale_image(image, 224, 224)
@@ -153,34 +150,54 @@ def get_dataset(tfrecords_dir, subset, batch_size):
     return dataset
 
 
-def train(model_name, batch_size, iter_size, initial_lr, lr_decay, epochs):
+def get_lrate_func(initial_lr, final_lr, total_epochs):
+    def step_decay(epoch):
+        """Decay LR linearly for each epoch."""
+        ratio = max((total_epochs - 1 - epoch) / (total_epochs - 1), 0.)
+        lr = final_lr + (initial_lr - final_lr) * ratio
+        print('Epoch %d, lr = %f' % (epoch, lr))
+        return lr
+    return step_decay
+
+
+def train(model_name, batch_size, iter_size, initial_lr, final_lr,
+          weight_decay, epochs):
     """Prepare data and train the model."""
     batch_size = get_batch_size(model_name, batch_size)
     iter_size = get_iter_size(model_name, iter_size)
     initial_lr = get_initial_lr(model_name, initial_lr)
-    lr_decay = get_lr_decay(model_name, lr_decay)
+    final_lr = get_final_lr(model_name, final_lr)
+    weight_decay = get_weight_decay(model_name, weight_decay)
+
+    # get trainig and validation data
     ds_train = get_dataset(
         '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'train', batch_size)
     ds_validation = get_dataset(
         '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'validation', batch_size)
 
-    model_checkpoint = tf.keras.callbacks.ModelCheckpoint(
+    # instiante training callbacks
+    lrate = tf.keras.callbacks.LearningRateScheduler(
+        get_lrate_func(initial_lr, final_lr, epochs))
+    model_ckpt = tf.keras.callbacks.ModelCheckpoint(
         '{}/{}'.format(config.SAVE_DIR, model_name) + '-ckpt-{epoch:03d}.h5',
         monitor='val_loss',
         save_best_only=True)
     tensorboard = tf.keras.callbacks.TensorBoard(
         log_dir='{}/{}'.format(config.LOG_DIR, time.time()))
 
-    model = get_training_model(model_name, iter_size, initial_lr, lr_decay)
+    # build model and do training
+    model = get_training_model(
+        model_name, iter_size, initial_lr, weight_decay)
     model.fit(
         x=ds_train,
         steps_per_epoch=1281167 // batch_size,
         validation_data=ds_validation,
         validation_steps=50000 // batch_size,
-        callbacks=[model_checkpoint, tensorboard],
+        callbacks=[lrate, model_ckpt, tensorboard],
         # The following doesn't seem to help.
         # use_multiprocessing=True, workers=4,
         epochs=epochs)
+
     # training finished
     model.save('{}/{}-model-final.h5'.format(config.SAVE_DIR, model_name))
 
@@ -189,18 +206,20 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--batch_size', type=int, default=-1)
     parser.add_argument('--iter_size', type=int, default=-1)
-    parser.add_argument('--initial_lr', type=float, default=-1.0)
-    parser.add_argument('--lr_decay', type=float, default=-1.0)
+    parser.add_argument('--initial_lr', type=float, default=-1.)
+    parser.add_argument('--final_lr', type=float, default=-1.)
+    parser.add_argument('--weight_decay', type=float, default=-1.)
     parser.add_argument('--epochs', type=int, default=1,
-                        help='number of epochs for training [1]')
+                        help='total number of epochs for training [1]')
     parser.add_argument('model', type=str,
-                        help='mobilenet_v2 or resnet50')
+                        help='mobilenet_v2, nasnet_mobile or resnet50')
     args = parser.parse_args()
     os.makedirs(config.SAVE_DIR, exist_ok=True)
     os.makedirs(config.LOG_DIR, exist_ok=True)
     config_keras_backend()
     train(args.model, args.batch_size, args.iter_size,
-          args.initial_lr, args.lr_decay, args.epochs)
+          args.initial_lr, args.final_lr, args.weight_decay,
+          args.epochs)
 
 
 if __name__ == '__main__':

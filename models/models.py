@@ -1,8 +1,9 @@
 """models.py
 
 Implemented models:
-    1. mobilenet_v2
-    2. ...... (more to be added)
+    1. MobileNetV2
+    2. NASNetMobile
+    3. ResNet50
 """
 
 
@@ -12,11 +13,11 @@ from config import config
 from utils.optimizer import convert_to_accum_optimizer
 
 
-def _get_model(model_func, initial_lr, iter_size, weight_decay):
-    """Build keras model."""
-    model = model_func(include_top=True, weights=None, classes=1000)
-    # add L2 regularization, reference:
-    # https://jricheimer.github.io/keras/2019/02/06/keras-hack-1/
+def _set_l2(model, weight_decay):
+    """Add L2 regularization into layers with weights
+
+    Reference: https://jricheimer.github.io/keras/2019/02/06/keras-hack-1/
+    """
     for layer in model.layers:
         if isinstance(layer, tf.keras.layers.DepthwiseConv2D):
             layer.add_loss(
@@ -27,6 +28,13 @@ def _get_model(model_func, initial_lr, iter_size, weight_decay):
         elif isinstance(layer, tf.keras.layers.BatchNormalization):
             layer.add_loss(
                 tf.keras.regularizers.l2(weight_decay)(layer.gamma))
+
+
+def _get_model(model_func, initial_lr, iter_size, weight_decay):
+    """Build keras model."""
+    model = model_func(include_top=True, weights=None, classes=1000)
+    if (weight_decay > 0):
+        _set_l2(model, weight_decay)
 
     # TO-DO: add weight decay here
     amsgrad = config.ADAM_USE_AMSGRAD

@@ -1,11 +1,11 @@
 keras_imagenet
 ==============
 
-This repository contains code I use to train ImageNet (ILSVRC2012) image classification models from scratch.  **Highlight**: I use [TFRecords](https://www.tensorflow.org/tutorials/load_data/tf_records) and [tf.data.TFRecordDataset API](https://www.tensorflow.org/api_docs/python/tf/data/TFRecordDataset) as an attemp to achieve best performance for training the models.
+This repository contains code I use to train ImageNet (ILSVRC2012) image classification models from scratch.  **Highlight**: I use [TFRecords](https://www.tensorflow.org/tutorials/load_data/tf_records) and [tf.data.TFRecordDataset API](https://www.tensorflow.org/api_docs/python/tf/data/TFRecordDataset) as an attempt to achieve best performance for training the models.
 
-I took most of the dataset preparation code from tensorflow [models/research/inception](https://github.com/tensorflow/models/tree/master/research/inception).  It was under Apache license as spcified [here](https://github.com/tensorflow/models/blob/master/LICENSE).
+I took most of the dataset preparation code from tensorflow [models/research/inception](https://github.com/tensorflow/models/tree/master/research/inception).  It was under Apache license as specified [here](https://github.com/tensorflow/models/blob/master/LICENSE).
 
-Otherwise, please refer to the following blog post of mine for some implementaion details about the code
+Otherwise, please refer to the following blog post of mine for some implementation details about the code:
 
 [To be updated...](https://jkjung-avt.github.io/)
 
@@ -15,7 +15,7 @@ The dataset and CNN models in this repository are built and trained using the ke
 
 In addition, the python code in this repository is for python3.
 
-I myself have tested all steps belowe with tensorflow-1.12.2.
+I myself have tested all steps below with tensorflow-1.12.2.
 
 # Step-by-step
 
@@ -54,7 +54,7 @@ I myself have tested all steps belowe with tensorflow-1.12.2.
    $ cd keras_imagenet
    ```
 
-4. Preprocess the validation image files (moving the JPEG files into corresponding subfolders).
+4. Pre-process the validation image files (moving the JPEG files into corresponding subfolders).
 
    ```shell
    $ cd data
@@ -70,12 +70,19 @@ I myself have tested all steps belowe with tensorflow-1.12.2.
    $ python3 build_imagenet_data.py \
              --output_directory ${HOME}/data/ILSVRC2012/tfrecords \
              --train_directory ${HOME}/data/ILSVRC2012/train \
-             --validation_directory ${HOME}/data/ILSVRC2012/validation 
+             --validation_directory ${HOME}/data/ILSVRC2012/validation
    ```
 
-6. Training MobileNet v2.
+6. Training MobileNet v2.  (In addition to 'mobilenet_v2', the `train.py` script also supports 'nasnet_mobile' and 'resnet50'.)
 
    ```shell
-   $ python3 train.py mobilenet_v2
+   $ python3 train.py --epochs 200 mobilenet_v2
    ```
 
+   List of training options:
+
+   * `--batch_size`: batch size for both training and validation
+   * `--iter_size`: aggregating gradients before doing 1 weight update
+   * `--initial_lr`: initial learning rate
+   * `--final_lr`: final learning rate (lr is decreased linearly at the end of each epoch)
+   * `--epochs`: total number of epochs

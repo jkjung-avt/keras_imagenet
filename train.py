@@ -155,7 +155,8 @@ def get_lrate_func(initial_lr, final_lr, total_epochs):
         """Decay LR linearly for each epoch."""
         ratio = max((total_epochs - 1 - epoch) / (total_epochs - 1), 0.)
         lr = final_lr + (initial_lr - final_lr) * ratio
-        print('Epoch %d, lr = %f' % (epoch, lr))
+        # Keras counts the 1st epoch as epoch 1 (not 0)
+        print('Epoch %d, lr = %f' % (epoch+1, lr))
         return lr
     return step_decay
 

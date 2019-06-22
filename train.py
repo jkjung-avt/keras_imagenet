@@ -70,8 +70,10 @@ def train(model_name, batch_size, iter_size, initial_lr, final_lr,
     # instiante training callbacks
     lrate = tf.keras.callbacks.LearningRateScheduler(
         get_lrate_func(initial_lr, final_lr, epochs))
+    save_name = model_name if not model_name.endswith('.h5') else \
+                os.path.split(model_name)[-1].split('.')[0].split('-')[0]
     model_ckpt = tf.keras.callbacks.ModelCheckpoint(
-        '{}/{}'.format(config.SAVE_DIR, model_name) + '-ckpt-{epoch:03d}.h5',
+        '{}/{}'.format(config.SAVE_DIR, save_name) + '-ckpt-{epoch:03d}.h5',
         monitor='val_loss',
         save_best_only=True)
     tensorboard = tf.keras.callbacks.TensorBoard(

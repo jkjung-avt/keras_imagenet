@@ -73,10 +73,10 @@ I myself have tested all steps below with tensorflow-1.12.2.
              --validation_directory ${HOME}/data/ILSVRC2012/validation
    ```
 
-6. Training MobileNet v2.  (In addition to 'mobilenet_v2', the `train.py` script also supports 'nasnet_mobile' and 'resnet50'.)
+6. Train a MobileNetV2.  (In addition to 'mobilenet_v2', the `train.py` script also supports 'nasnet_mobile' and 'resnet50'.)
 
    ```shell
-   $ python3 train.py --epochs 200 mobilenet_v2
+   $ python3 train.py --epochs 50 mobilenet_v2
    ```
 
    List of training options:
@@ -84,5 +84,22 @@ I myself have tested all steps below with tensorflow-1.12.2.
    * `--batch_size`: batch size for both training and validation
    * `--iter_size`: aggregating gradients before doing 1 weight update
    * `--initial_lr`: initial learning rate
-   * `--final_lr`: final learning rate (lr is decreased linearly at the end of each epoch)
+   * `--final_lr`: final learning rate (learning rate is decreased linearly at the end of each epoch)
    * `--epochs`: total number of epochs
+
+# Additional Notes on MobileNetV2
+
+Somehow Keras has trouble loading a trained/saved MobileNetV2 model.  The load_model() call would fail with error message:
+
+   `TypeError: '<' not supported between instances of 'dict' and 'float'`
+
+To work around this problem, I followed [this post](https://github.com/tensorflow/tensorflow/issues/22697#issuecomment-436301471) and added the following at line 309 (after the `super()` call of `ReLU`) lines in `/usr/local/lib/python3.6/dist-packages/tensorflow/python/keras/layers/advanced_activations.py`.
+
+   ```python
+       if type(max_value) is dict:
+           max_value = max_value['value']
+       if type(negative_slope) is dict:
+           negative_slope = negative_slope['value']
+       if type(threshold) is dict:
+           threshold = threshold['value']
+   ```

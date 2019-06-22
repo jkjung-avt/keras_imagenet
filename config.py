@@ -1,7 +1,10 @@
 """config.py
 """
 
+import os
+
 from easydict import EasyDict as edict
+
 
 config = edict()
 
@@ -10,6 +13,11 @@ config.SAVE_DIR = 'saves'
 
 # Subdirectory name for saving TensorBoard log files
 config.LOG_DIR = 'logs'
+
+
+# Default path to the ImageNet TFRecords dataset files
+config.DEFAULT_DATASET_DIR = os.path.join(
+    os.environ['HOME'], 'data/ILSVRC2012/tfrecords')
 
 # Number of parallel works for generating training/validation data
 config.NUM_DATA_WORKERS = 4

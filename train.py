@@ -93,7 +93,7 @@ def train(model_name, batch_size, iter_size, initial_lr, final_lr,
         epochs=epochs)
 
     # training finished
-    model.save('{}/{}-model-final.h5'.format(config.SAVE_DIR, model_name))
+    model.save('{}/{}-model-final.h5'.format(config.SAVE_DIR, save_name))
 
 
 def main():

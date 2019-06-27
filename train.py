@@ -53,7 +53,7 @@ def get_lrate_func(initial_lr, final_lr, total_epochs):
 
 
 def train(model_name, batch_size, iter_size, initial_lr, final_lr,
-          weight_decay, epochs):
+          weight_decay, epochs, dataset_dir):
     """Prepare data and train the model."""
     batch_size = get_batch_size(model_name, batch_size)
     iter_size = get_iter_size(model_name, iter_size)
@@ -61,13 +61,11 @@ def train(model_name, batch_size, iter_size, initial_lr, final_lr,
     final_lr = get_final_lr(model_name, final_lr)
     weight_decay = get_weight_decay(model_name, weight_decay)
 
-    # get trainig and validation data
-    ds_train = get_dataset(
-        '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'train', batch_size)
-    ds_validation = get_dataset(
-        '/ssd/jkjung/data/ILSVRC2012/tfrecords', 'validation', batch_size)
+    # get training and validation data
+    ds_train = get_dataset(dataset_dir, 'train', batch_size)
+    ds_validation = get_dataset(dataset_dir, 'validation', batch_size)
 
-    # instiante training callbacks
+    # instantiate training callbacks
     lrate = tf.keras.callbacks.LearningRateScheduler(
         get_lrate_func(initial_lr, final_lr, epochs))
     save_name = model_name if not model_name.endswith('.h5') else \
@@ -115,7 +113,7 @@ def main():
     config_keras_backend()
     train(args.model, args.batch_size, args.iter_size,
           args.initial_lr, args.final_lr, args.weight_decay,
-          args.epochs)
+          args.epochs, args.dataset_dir)
 
 
 if __name__ == '__main__':

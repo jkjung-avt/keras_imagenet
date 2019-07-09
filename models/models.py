@@ -10,7 +10,8 @@ Implemented models:
 import tensorflow as tf
 
 from config import config
-from utils.optimizer import convert_to_accum_optimizer
+from models.adamw import AdamW
+from models.optimizer import convert_to_accum_optimizer
 
 
 def _set_l2(model, weight_decay):
@@ -71,7 +72,10 @@ def get_weight_decay(model_name, value):
     return value if value > 0 else 1e-5
 
 
-def get_training_model(model_name, iter_size, initial_lr, weight_decay):
+def get_training_model(model_name, iter_size, initial_lr, weight_decay,
+                       use_weight_decay=True, use_l2_regularization=False):
+    if use_weight_decay + use_l2_regularization >= 2:
+        raise ValueError
     """Build the model to be trained."""
     if model_name.endswith('.h5'):
         model = tf.keras.models.load_model(model_name)
@@ -87,12 +91,17 @@ def get_training_model(model_name, iter_size, initial_lr, weight_decay):
     else:
         raise ValueError
 
-    if (weight_decay > 0):
-        _set_l2(model, weight_decay)
-    amsgrad = config.ADAM_USE_AMSGRAD
-    optimizer = convert_to_accum_optimizer(
-        tf.keras.optimizers.Adam(lr=initial_lr, amsgrad=amsgrad),
-        iter_size)
+    if use_weight_decay:
+        optimizer = AdamW(lr=initial_lr, weight_decay=weight_decay)
+    else:
+        if use_l2_regularization:
+            if (weight_decay > 0):
+                _set_l2(model, weight_decay)
+        amsgrad = config.ADAM_USE_AMSGRAD
+        optimizer = tf.keras.optimizers.Adam(lr=initial_lr, amsgrad=amsgrad)
+    if iter_size > 1:
+        optimizer = convert_to_accum_optimizer(optimizer, iter_size)
+
     model.compile(
         optimizer=optimizer,
         loss='categorical_crossentropy',

@@ -97,8 +97,7 @@ def get_training_model(model_name, iter_size, initial_lr, weight_decay,
         if use_l2_regularization:
             if (weight_decay > 0):
                 _set_l2(model, weight_decay)
-        amsgrad = config.ADAM_USE_AMSGRAD
-        optimizer = tf.keras.optimizers.Adam(lr=initial_lr, amsgrad=amsgrad)
+        optimizer = tf.keras.optimizers.Adam(lr=initial_lr)
     if iter_size > 1:
         optimizer = convert_to_accum_optimizer(optimizer, iter_size)
 

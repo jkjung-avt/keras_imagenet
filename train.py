@@ -78,8 +78,13 @@ def train(model_name, batch_size, iter_size, initial_lr, final_lr,
         log_dir='{}/{}'.format(config.LOG_DIR, time.time()))
 
     # build model and do training
+    weight_decay_normalizer = 1. / (((1281167*epochs) / batch_size) ** .5)
     model = get_training_model(
-        model_name, iter_size, initial_lr, weight_decay)
+        model_name=model_name,
+        iter_size=iter_size,
+        initial_lr=initial_lr,
+        weight_decay=weight_decay,
+        weight_decay_normalizer=weight_decay_normalizer)
     model.fit(
         x=ds_train,
         steps_per_epoch=1281167 // batch_size,

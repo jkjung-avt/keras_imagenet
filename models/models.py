@@ -73,7 +73,8 @@ def get_weight_decay(model_name, value):
 
 
 def get_training_model(model_name, iter_size, initial_lr, weight_decay,
-                       use_weight_decay=True, use_l2_regularization=False):
+                       use_weight_decay=True, use_l2_regularization=False,
+                       weight_decay_normalizer=1.):
     if use_weight_decay + use_l2_regularization >= 2:
         raise ValueError
     """Build the model to be trained."""
@@ -92,7 +93,9 @@ def get_training_model(model_name, iter_size, initial_lr, weight_decay,
         raise ValueError
 
     if use_weight_decay:
-        optimizer = AdamW(lr=initial_lr, weight_decay=weight_decay)
+        optimizer = AdamW(lr=initial_lr,
+                          weight_decay=weight_decay,
+                          weight_decay_normalizer=weight_decay_normalizer)
     else:
         if use_l2_regularization:
             if (weight_decay > 0):

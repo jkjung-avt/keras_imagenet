@@ -90,23 +90,23 @@ In addition, the python code in this repository is for python3.  Make sure you h
    * `--weight_decay`: weight decay value for 'AdamW'
    * `--epochs`: total number of epochs
 
-# Additional Notes on MobileNetV2
+   **Additional Notes on MobileNetV2**
 
-Somehow Keras has trouble loading a trained/saved MobileNetV2 model.  The load_model() call would fail with error message:
-
-   `TypeError: '<' not supported between instances of 'dict' and 'float'`
-
-To work around this problem, I followed [this post](https://github.com/tensorflow/tensorflow/issues/22697#issuecomment-436301471) and added the following at line 309 (after the `super()` call of `ReLU`) lines in `/usr/local/lib/python3.6/dist-packages/tensorflow/python/keras/layers/advanced_activations.py`.
-
-   ```python
-       if type(max_value) is dict:
-           max_value = max_value['value']
-       if type(negative_slope) is dict:
-           negative_slope = negative_slope['value']
-       if type(threshold) is dict:
-           threshold = threshold['value']
-   ```
-
+   For some reason, Keras has trouble loading a trained/saved MobileNetV2 model.  The load_model() call would fail with error message:
+   
+      `TypeError: '<' not supported between instances of 'dict' and 'float'`
+   
+   To work around this problem, I followed [this post](https://github.com/tensorflow/tensorflow/issues/22697#issuecomment-436301471) and added the following at line 309 (after the `super()` call of `ReLU`) lines in `/usr/local/lib/python3.6/dist-packages/tensorflow/python/keras/layers/advanced_activations.py`.
+   
+      ```python
+          if type(max_value) is dict:
+              max_value = max_value['value']
+          if type(negative_slope) is dict:
+              negative_slope = negative_slope['value']
+          if type(threshold) is dict:
+              threshold = threshold['value']
+      ```
+   
 7. Evaluate accuracy of the trained MobileNetv2 model.
 
    ```shell

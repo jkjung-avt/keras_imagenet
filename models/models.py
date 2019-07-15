@@ -79,7 +79,9 @@ def get_training_model(model_name, iter_size, initial_lr, weight_decay,
         raise ValueError
     """Build the model to be trained."""
     if model_name.endswith('.h5'):
-        model = tf.keras.models.load_model(model_name)
+        model = tf.keras.models.load_model(
+            model_name,
+            custom_objects={'AdamW': AdamW})
     elif model_name == 'mobilenet_v2':
         model = tf.keras.applications.mobilenet_v2.MobileNetV2(
             include_top=True, weights=None, classes=1000)

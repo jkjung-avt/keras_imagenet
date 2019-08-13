@@ -11,6 +11,7 @@ import tensorflow as tf
 
 from config import config
 from utils.dataset import get_dataset
+from models.adamw import AdamW
 
 
 DESCRIPTION = """For example:
@@ -40,7 +41,9 @@ def main():
     config_keras_backend()
     if not args.model_file.endswith('.h5'):
         sys.exit('model_file is not a .h5')
-    model = tf.keras.models.load_model(args.model_file)
+    model = tf.keras.models.load_model(
+        args.model_file,
+        custom_objects={'AdamW': AdamW})
     ds_validation = get_dataset(
         args.dataset_dir, 'validation', args.batch_size)
     results = model.evaluate(

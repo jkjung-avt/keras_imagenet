@@ -82,17 +82,22 @@ def get_training_model(model_name, iter_size, initial_lr, weight_decay,
         model = tf.keras.models.load_model(
             model_name,
             custom_objects={'AdamW': AdamW})
-    elif model_name == 'mobilenet_v2':
-        model = tf.keras.applications.mobilenet_v2.MobileNetV2(
-            include_top=True, weights=None, classes=1000)
-    elif model_name == 'nasnet_mobile':
-        model = tf.keras.applications.nasnet.NASNetMobile(
-            include_top=True, weights=None, classes=1000)
-    elif model_name == 'resnet50':
-        model = tf.keras.applications.resnet50.ResNet50(
-            include_top=True, weights=None, classes=1000)
     else:
-        raise ValueError
+        if model_name == 'mobilenet_v2':
+            model = tf.keras.applications.mobilenet_v2.MobileNetV2(
+                input_shape=(224,224,3), include_top=False, weights=None)
+        elif model_name == 'nasnet_mobile':
+            model = tf.keras.applications.nasnet.NASNetMobile(
+                input_shape=(224,224,3), include_top=False, weights=None)
+        elif model_name == 'resnet50':
+            model = tf.keras.applications.resnet50.ResNet50(
+                input_shape=(224,224,3), include_top=False, weights=None)
+        else:
+            raise ValueError
+        x = tf.keras.layers.GlobalAveragePooling2D()(model.output)
+        x = tf.keras.layers.Dropout(0.5)(x)
+        x = tf.keras.layers.Dense(1000, activation='softmax', name='Logits')(x)
+        model = tf.keras.models.Model(inputs=model.input, outputs=x)
 
     if use_weight_decay:
         optimizer = AdamW(lr=initial_lr,
@@ -110,4 +115,5 @@ def get_training_model(model_name, iter_size, initial_lr, weight_decay,
         optimizer=optimizer,
         loss='categorical_crossentropy',
         metrics=['accuracy'])
+    print(model.summary())
     return model

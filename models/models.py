@@ -39,6 +39,11 @@ def _set_l2(model, weight_decay):
 
 
 def get_batch_size(model_name, value):
+    """get_batch_size
+
+    These default batch_size values were chosen based on available
+    GPU RAM (11GB) on GeForce GTX-2080Ti.
+    """
     if value > 0:
         return value
     elif 'mobilenet_v2' in model_name:
@@ -52,6 +57,11 @@ def get_batch_size(model_name, value):
 
 
 def get_iter_size(model_name, value):
+    """get_iter_size
+
+    These default iter_size values were chosen to make 'effective'
+    batch_size to be 256.
+    """
     if value > 0:
         return value
     elif 'mobilenet_v2' in model_name:
@@ -65,11 +75,11 @@ def get_iter_size(model_name, value):
 
 
 def get_initial_lr(model_name, value):
-    return value if value > 0. else 1e-1
+    return value if value > 0. else 3e-4
 
 
 def get_final_lr(model_name, value):
-    return value if value > 0. else 1e-5
+    return value if value > 0. else 3e-4
 
 
 def get_weight_decay(model_name, value):

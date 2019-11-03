@@ -86,12 +86,14 @@ def get_weight_decay(model_name, value):
     return value if value >= 0. else 1e-5
 
 
-def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-2):
+def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-1):
     """get_optimizer
 
-    Note that learning rate decay is implemented as a callback in
-    the model.fit(), so I do not specify 'decay' in the optimizers
-    here.
+    Note:
+    1. Learning rate decay is implemented as a callback in model.fit(),
+       so I do not specify 'decay' in the optimizers here.
+    2. Refer to the following for information about 'epsilon' in Adam:
+       https://github.com/tensorflow/tensorflow/blob/v1.14.0/tensorflow/python/keras/optimizer_v2/adam.py#L93
     """
     if optim_name == 'sgd':
         return tf.keras.optimizers.SGD(lr=initial_lr, momentum=0.9)

@@ -26,9 +26,9 @@ $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
                    --optimizer    adam \
                    --batch_size   64 \
                    --iter_size    4 \
-                   --initial_lr   1e-1 \
-                   --final_lr     1e-5 \
-                   --weight_decay 0.0 \
+                   --initial_lr   1e-2 \
+                   --final_lr     1e-4 \
+                   --weight_decay 1e-5 \
                    --epochs       60 \
                    mobilenet_v2
 """
@@ -48,9 +48,8 @@ def config_keras_backend():
 def get_lrate_func(initial_lr, final_lr, total_epochs):
     def step_decay(epoch):
         """Decay LR linearly for each epoch."""
-        ratio = max((total_epochs - epoch) / (total_epochs - 1.), 0.)
+        ratio = max((total_epochs - epoch - 1.) / (total_epochs - 1.), 0.)
         lr = final_lr + (initial_lr - final_lr) * ratio
-        # Keras counts the 1st epoch as epoch 1 (not 0)
         print('Epoch %d, lr = %f' % (epoch+1, lr))
         return lr
     return step_decay

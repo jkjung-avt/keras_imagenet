@@ -45,6 +45,14 @@ def config_keras_backend():
     tf.keras.backend.set_session(session)
 
 
+def clear_keras_session():
+    """Clear keras session.
+
+    This is for avoiding the problem of: 'Exception ignored in: <bound method BaseSession.__del__ of <tensorflow.python.client.session.Session object ...'
+    """
+    tf.keras.backend.clear_session()
+
+
 def get_lrate_func(initial_lr, final_lr, total_epochs):
     def step_decay(epoch):
         """Decay LR linearly for each epoch."""
@@ -123,6 +131,7 @@ def main():
     train(args.model, args.optimizer, args.batch_size, args.iter_size,
           args.initial_lr, args.final_lr, args.weight_decay,
           args.epochs, args.dataset_dir)
+    clear_keras_session()
 
 
 if __name__ == '__main__':

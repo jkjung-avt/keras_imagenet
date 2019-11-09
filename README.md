@@ -65,7 +65,7 @@ In addition, the python code in this repository is for python3.  Make sure you h
              imagenet_2012_validation_synset_labels.txt
    ```
 
-5. Build TFRecord files for 'train' and 'validation'.  (This step could takes a couple of hours, since there are 1,281,167 training images and 50,000 validation images in total.)
+5. Build TFRecord files for 'train' and 'validation'.  (This step could take a couple of hours, since there are 1,281,167 training images and 50,000 validation images in total.)
 
    ```shell
    $ mkdir ${HOME}/data/ILSVRC2012/tfrecords
@@ -75,7 +75,7 @@ In addition, the python code in this repository is for python3.  Make sure you h
              --validation_directory ${HOME}/data/ILSVRC2012/validation
    ```
 
-6. As an example, train a MobileNetV2 model.  Take a peek at the `train_mobilenet_v2.sh` script before running it.  You could certainly modify the learning rate schedule, weight decay and epochs in the script to see if you could try a model with better accuracy.  (On my desktop PC with an NVIDIA GTX-1080 Ti, it takes roughly 2 weeks to train this model for 200 epochs.)
+6. As an example, train a MobileNetV2 model.  Take a peek at the `train_mobilenet_v2.sh` script before running it.  You could adjust the learning rate schedule, weight decay and epochs in the script to see if it produces a model with better accuracy.  (On my desktop PC with an NVIDIA GTX-1080 Ti, it takes roughly 2 weeks to train this model for 200 epochs.)
 
    ```shell
    $ ./train_mobilenet_v2.sh

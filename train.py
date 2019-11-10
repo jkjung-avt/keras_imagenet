@@ -14,8 +14,10 @@ from config import config
 from utils.dataset import get_dataset
 from models.models import get_batch_size
 from models.models import get_iter_size
+from models.models import get_lr_func
 from models.models import get_initial_lr
 from models.models import get_final_lr
+from models.models import get_lr_decay
 from models.models import get_weight_decay
 from models.models import get_optimizer
 from models.models import get_training_model
@@ -26,6 +28,7 @@ $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
                    --optimizer    adam \
                    --batch_size   64 \
                    --iter_size    4 \
+                   --lr_sched     linear \
                    --initial_lr   1e-2 \
                    --final_lr     1e-4 \
                    --weight_decay 1e-5 \
@@ -53,23 +56,15 @@ def clear_keras_session():
     tf.keras.backend.clear_session()
 
 
-def get_lrate_func(initial_lr, final_lr, total_epochs):
-    def step_decay(epoch):
-        """Decay LR linearly for each epoch."""
-        ratio = max((total_epochs - epoch - 1.) / (total_epochs - 1.), 0.)
-        lr = final_lr + (initial_lr - final_lr) * ratio
-        print('Epoch %d, lr = %f' % (epoch+1, lr))
-        return lr
-    return step_decay
-
-
 def train(model_name, optim_name, batch_size, iter_size,
-          initial_lr, final_lr, weight_decay, epochs, dataset_dir):
+          lr_sched, initial_lr, final_lr, lr_decay,
+          weight_decay, epochs, dataset_dir):
     """Prepare data and train the model."""
     batch_size   = get_batch_size(model_name, batch_size)
     iter_size    = get_iter_size(model_name, iter_size)
     initial_lr   = get_initial_lr(model_name, initial_lr)
     final_lr     = get_final_lr(model_name, final_lr)
+    lr_decay     = get_lr_decay(model_name, lr_decay)
     optimizer    = get_optimizer(model_name, optim_name, initial_lr)
     weight_decay = get_weight_decay(model_name, weight_decay)
 
@@ -78,8 +73,7 @@ def train(model_name, optim_name, batch_size, iter_size,
     ds_valid = get_dataset(dataset_dir, 'validation', batch_size)
 
     # instantiate training callbacks
-    lrate = tf.keras.callbacks.LearningRateScheduler(
-        get_lrate_func(initial_lr, final_lr, epochs))
+    lrate = get_lr_func(epochs, lr_sched, initial_lr, final_lr, lr_decay)
     save_name = model_name if not model_name.endswith('.h5') else \
                 os.path.split(model_name)[-1].split('.')[0].split('-')[0]
     model_ckpt = tf.keras.callbacks.ModelCheckpoint(
@@ -114,11 +108,14 @@ def main():
     parser.add_argument('--dataset_dir', type=str,
                         default=config.DEFAULT_DATASET_DIR)
     parser.add_argument('--optimizer', type=str, default='adam',
-                        choices=['sgd', 'adam'])
+                        choices=['sgd', 'adam', 'rmsprop'])
     parser.add_argument('--batch_size', type=int, default=-1)
     parser.add_argument('--iter_size', type=int, default=-1)
+    parser.add_argument('--lr_sched', type=str, default='linear',
+                        choices=['linear', 'exp'])
     parser.add_argument('--initial_lr', type=float, default=-1.)
     parser.add_argument('--final_lr', type=float, default=-1.)
+    parser.add_argument('--lr_decay', type=float, default=-1.)
     parser.add_argument('--weight_decay', type=float, default=-1.)
     parser.add_argument('--epochs', type=int, default=1,
                         help='total number of epochs for training [1]')
@@ -129,8 +126,8 @@ def main():
     os.makedirs(config.LOG_DIR, exist_ok=True)
     config_keras_backend()
     train(args.model, args.optimizer, args.batch_size, args.iter_size,
-          args.initial_lr, args.final_lr, args.weight_decay,
-          args.epochs, args.dataset_dir)
+          args.lr_sched, args.initial_lr, args.final_lr, args.lr_decay,
+          args.weight_decay, args.epochs, args.dataset_dir)
     clear_keras_session()
 
 

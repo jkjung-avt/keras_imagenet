@@ -82,6 +82,37 @@ def get_final_lr(model_name, value):
     return value if value > 0. else 3e-4
 
 
+def get_lr_decay(model_name, value):
+    return value if value > 0. else 1.0  # default is no decay
+
+
+def get_lr_func(total_epochs, lr_sched='linear',
+                initial_lr=3e-4, final_lr=0., lr_decay=1.):
+    """Returns a learning decay function for training.
+
+    2 types of lr_sched are supported: 'linear' or 'exp' (exponential).
+    """
+    def linear_decay(epoch):
+        """Decay LR linearly for each epoch."""
+        ratio = max((total_epochs - epoch - 1.) / (total_epochs - 1.), 0.)
+        lr = final_lr + (initial_lr - final_lr) * ratio
+        print('Epoch %d, lr = %f' % (epoch+1, lr))
+        return lr
+
+    def exp_decay(epoch):
+        """Decay LR exponentially for each epoch."""
+        lr = initial_lr * (lr_decay ** epoch)
+        print('Epoch %d, lr = %f' % (epoch+1, lr))
+        return lr
+
+    if lr_sched == 'linear':
+        return tf.keras.callbacks.LearningRateScheduler(linear_decay)
+    elif lr_sched == 'exp':
+        return tf.keras.callbacks.LearningRateScheduler(exp_decay)
+    else:
+        raise ValueError('bad lr_sched')
+
+
 def get_weight_decay(model_name, value):
     return value if value >= 0. else 1e-5
 
@@ -99,6 +130,9 @@ def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-1):
         return tf.keras.optimizers.SGD(lr=initial_lr, momentum=0.9)
     elif optim_name == 'adam':
         return tf.keras.optimizers.Adam(lr=initial_lr, epsilon=epsilon)
+    elif optim_name == 'rmsprop':
+        return tf.keras.optimizers.RMSprop(lr=initial_lr, epsilon=epsilon,
+                                           rho=0.9)
     else:
         # implementation of 'AdamW' is removed temporarily
         raise ValueError

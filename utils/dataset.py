@@ -6,6 +6,7 @@ dataset in TFRecords format.
 
 
 import os
+from functools import partial
 
 import tensorflow as tf
 
@@ -106,16 +107,6 @@ def _parse_fn(example_serialized, is_training):
     return (image, label)
 
 
-def parse_fn_train(example_serialized):
-    """Parses an Example proto containing a training image."""
-    return _parse_fn(example_serialized, is_training=True)
-
-
-def parse_fn_valid(example_serialized):
-    """Parses an Example proto containing a validation image."""
-    return _parse_fn(example_serialized, is_training=False)
-
-
 def get_dataset(tfrecords_dir, subset, batch_size):
     """Read TFRecords files and turn them into a TFRecordDataset."""
     files = tf.matching_files(os.path.join(tfrecords_dir, '%s-*' % subset))
@@ -124,7 +115,8 @@ def get_dataset(tfrecords_dir, subset, batch_size):
     shards = shards.repeat()
     dataset = shards.interleave(tf.data.TFRecordDataset, cycle_length=4)
     dataset = dataset.shuffle(buffer_size=8192)
-    parser = parse_fn_train if subset == 'train' else parse_fn_valid
+    parser = partial(
+        _parse_fn, is_training=True if subset == 'train' else False)
     dataset = dataset.apply(
         tf.data.experimental.map_and_batch(
             map_func=parser,

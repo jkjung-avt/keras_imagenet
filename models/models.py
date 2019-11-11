@@ -12,6 +12,7 @@ import tensorflow as tf
 from config import config
 from models.adamw import AdamW
 from models.optimizer import convert_to_accum_optimizer
+from models.optimizer import convert_to_lookahead_optimizer
 
 
 IN_SHAPE = (224, 224, 3)  # shape of input image tensor
@@ -138,7 +139,8 @@ def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-1):
         raise ValueError
 
 
-def get_training_model(model_name, optimizer, iter_size, weight_decay):
+def get_training_model(model_name, optimizer, use_lookahead,
+                       iter_size, weight_decay):
     """Build the model to be trained."""
     if model_name.endswith('.h5'):
         # load a saved model
@@ -169,6 +171,8 @@ def get_training_model(model_name, optimizer, iter_size, weight_decay):
         _set_l2(model, weight_decay)
     if iter_size > 1:
         optimizer = convert_to_accum_optimizer(optimizer, iter_size)
+    if use_lookahead:
+        optimizer = convert_to_lookahead_optimizer(optimizer)
 
     # make sure all layers are set to be trainable
     for layer in model.layers:

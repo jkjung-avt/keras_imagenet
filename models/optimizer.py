@@ -104,9 +104,9 @@ def convert_to_lookahead_optimizer(optimizer, k=5, slow_step=0.5):
     optimizer.k = K.variable(
         k, dtype='int64', name='k')
     optimizer.slow_ratio = K.variable(
-        slow_step, dtype='float32', name='slow_ratio')
+        1 - slow_step, dtype='float32', name='slow_ratio')
     optimizer.fast_ratio = K.variable(
-        1. - slow_step, dtype='float32', name='fast_ratio')
+        slow_step, dtype='float32', name='fast_ratio')
     optimizer.lookahead_iterations = K.variable(
         0, dtype='int64', name='lookahead_iterations')
 
@@ -114,6 +114,11 @@ def convert_to_lookahead_optimizer(optimizer, k=5, slow_step=0.5):
         self.slow_params = [K.zeros(K.int_shape(p), dtype=K.dtype(p))
                             for p in params]
         update_iter = [K.update_add(self.lookahead_iterations, 1)]
+
+        def just_copy_func():
+            copy_slow_params = [
+                K.update(p, q) for p, q in zip(self.slow_params, params)]
+            return tf.group(*copy_slow_params)
 
         def update_func():
             update_params = [
@@ -127,13 +132,16 @@ def convert_to_lookahead_optimizer(optimizer, k=5, slow_step=0.5):
         def just_iter_func():
             return tf.group(*update_iter)
 
-        # do the 'slow weights update' every 'k' iterations
-        update_switch = K.equal(
-            self.lookahead_iterations % self.k, 0)
-        with tf.control_dependencies(self.orig_get_updates(loss, params)):
-            self.updates = [
-                K.switch(update_switch, update_func, just_iter_func)]
-            return self.updates
+        # copy params to self.slow_params at iteration 0
+        copy_switch = K.equal(self.lookahead_iterations, 0)
+        copy_params = [K.switch(copy_switch, just_copy_func, tf.no_op())]
+        with tf.control_dependencies(copy_params):
+            # do the 'slow weights update' every 'k' iterations
+            update_switch = K.equal(self.lookahead_iterations % self.k, 0)
+            with tf.control_dependencies(self.orig_get_updates(loss, params)):
+                self.updates = [
+                    K.switch(update_switch, update_func, just_iter_func)]
+                return self.updates
 
     # convert new_get_updates() to class method
     optimizer.get_updates = new_get_updates.__get__(

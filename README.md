@@ -117,4 +117,4 @@ In addition, the python code in this repository is for python3.  Make sure you h
                          saves/mobilenet_v2-model-final.h5
    ```
 
-8. For training other CNN models, check out `models/models.py`.  In addition to `mobilenet_v2`, `nasnet_mobile` and `resnet50`, you could also implement your own Keras CNN models by extending the code.
+8. For training other CNN models, check out `models/models.py`.  In addition to `mobilenet_v2`, `resnet50` and `googlenetx`, you could also implement your own Keras CNN models by extending the code.

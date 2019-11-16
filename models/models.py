@@ -2,17 +2,18 @@
 
 Implemented models:
     1. MobileNetV2 ('mobilenet_v2')
-    2. NASNetMobile ('nasnet_mobile')
-    3. ResNet50 ('resnet50')
+    2. ResNet50 ('resnet50')
+    3. GoogLeNetX ('googlenetx'): a modified implementation of GoogLeNet
 """
 
 
 import tensorflow as tf
 
 from config import config
-from models.adamw import AdamW
-from models.optimizer import convert_to_accum_optimizer
-from models.optimizer import convert_to_lookahead_optimizer
+from .googlenetx import GoogLeNetX
+from .adamw import AdamW
+from .optimizer import convert_to_accum_optimizer
+from .optimizer import convert_to_lookahead_optimizer
 
 
 IN_SHAPE = (224, 224, 3)  # shape of input image tensor
@@ -34,9 +35,10 @@ def _set_l2(model, weight_decay):
         elif isinstance(layer, tf.keras.layers.Dense):
             layer.add_loss(
                 tf.keras.regularizers.l2(weight_decay)(layer.kernel))
-        elif isinstance(layer, tf.keras.layers.BatchNormalization):
-            layer.add_loss(
-                tf.keras.regularizers.l2(weight_decay)(layer.gamma))
+        #elif isinstance(layer, tf.keras.layers.BatchNormalization):
+        #    if layer.gamma is not None:
+        #        layer.add_loss(
+        #            tf.keras.regularizers.l2(weight_decay)(layer.gamma))
 
 
 def get_batch_size(model_name, value):
@@ -49,10 +51,10 @@ def get_batch_size(model_name, value):
         return value
     elif 'mobilenet_v2' in model_name:
         return 64
-    elif 'nasnet_mobile' in model_name:
-        return 32
     elif 'resnet50' in model_name:
         return 16
+    elif 'googlenetx' in model_name:
+        return 64
     else:
         raise ValueError
 
@@ -67,10 +69,10 @@ def get_iter_size(model_name, value):
         return value
     elif 'mobilenet_v2' in model_name:
         return 4
-    elif 'nasnet_mobile' in model_name:
-        return 8
     elif 'resnet50' in model_name:
         return 16
+    elif 'googlenetx' in model_name:
+        return 4
     else:
         raise ValueError
 
@@ -152,11 +154,11 @@ def get_training_model(model_name, optimizer, use_lookahead,
         if model_name == 'mobilenet_v2':
             backbone = tf.keras.applications.mobilenet_v2.MobileNetV2(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'nasnet_mobile':
-            backbone = tf.keras.applications.nasnet.NASNetMobile(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
         elif model_name == 'resnet50':
             backbone = tf.keras.applications.resnet50.ResNet50(
+                input_shape=IN_SHAPE, include_top=False, weights=None)
+        elif model_name == 'googlenetx':
+            backbone = GoogLeNetX(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         else:
             raise ValueError

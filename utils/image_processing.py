@@ -26,6 +26,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import math
+import random
+
 import tensorflow as tf
 
 from tensorflow.python.ops import control_flow_ops
@@ -291,6 +294,7 @@ def preprocess_for_train(image,
                          height,
                          width,
                          bbox,
+                         max_angle=15.,
                          fast_mode=True,
                          scope=None,
                          add_image_summaries=False):
@@ -322,11 +326,17 @@ def preprocess_for_train(image,
   """
   with tf.name_scope(scope, 'distort_image', [image, height, width, bbox]):
     assert image.dtype == tf.float32
+    # random rotatation of image between -20 to 20 degrees with 0.75 prob
+    angle = random.uniform(-max_angle, max_angle) \
+            if random.random() < 0.75 else 0.
+    rotated_image = tf.contrib.image.rotate(image, math.radians(angle),
+                                            interpolation='BILINEAR')
+    # random cropping
     distorted_image, distorted_bbox = distorted_bounding_box_crop(
-        image,
+        rotated_image,
         bbox,
-        min_object_covered=0.5,
-        area_range=(0.5, 1.0))
+        min_object_covered=0.6,
+        area_range=(0.6, 1.0))
     # Restore the shape since the dynamic slice based upon the bbox_size loses
     # the third dimension.
     distorted_image.set_shape([None, None, 3])
@@ -416,6 +426,6 @@ def preprocess_image(image,
     bbox = tf.constant([0.0, 0.0, 1.0, 1.0],
                        dtype=tf.float32,
                        shape=[1, 1, 4])
-    return preprocess_for_train(image, height, width, bbox, fast_mode=False)
+    return preprocess_for_train(image, height, width, bbox, fast_mode=True)
   else:
     return preprocess_for_eval(image, height, width)

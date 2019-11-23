@@ -154,19 +154,19 @@ def GoogLeNetBN(include_top=False,
     x = conv2d_bn(x, 192, (3, 3))
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
 
-    x = inception(x, ( 64,  (96,128), (16,32), 32))    # 3a: 28x28x256
-    x = inception(x, (128, (128,192), (32,96), 64))    # 3b: 28x28x480
+    x = inception(x, ( 64,  (96, 128), (16,  32), 32))    # 3a: 28x28x256
+    x = inception(x, (128, (128, 192), (32,  96),  64))  # 3b: 28x28x480
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
 
-    x = inception(x, (192,  (96,208),  (16,48),  64))  # 4a: 14x14x512
-    x = inception(x, (160, (112,224),  (24,64),  64))  # 4b: 14x14x512
-    x = inception(x, (128, (128,256),  (24,64),  64))  # 4c: 14x14x512
-    x = inception(x, (112, (144,288),  (32,64),  64))  # 4d: 14x14x528
-    x = inception(x, (256, (160,320), (32,128), 128))  # 4e: 14x14x832
+    x = inception(x, (192,  (96, 208), (16,  48),  64))  # 4a: 14x14x512
+    x = inception(x, (160, (112, 224), (24,  64),  64))  # 4b: 14x14x512
+    x = inception(x, (128, (128, 256), (24,  64),  64))  # 4c: 14x14x512
+    x = inception(x, (112, (144, 288), (32,  64),  64))  # 4d: 14x14x528
+    x = inception(x, (256, (160, 320), (32, 128), 128))  # 4e: 14x14x832
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
 
-    x = inception(x, (256, (160,320), (32,128), 128))  # 5a: 7x7x832
-    x = inception(x, (384, (192,384), (48,128), 128))  # 5b: 7x7x1024
+    x = inception(x, (256, (160, 320), (32, 128), 128))  # 5a: 7x7x832
+    x = inception(x, (384, (192, 384), (48, 128), 128))  # 5b: 7x7x1024
 
     if include_top:
         # Classification block

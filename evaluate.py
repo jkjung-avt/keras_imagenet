@@ -10,6 +10,7 @@ import argparse
 import tensorflow as tf
 
 from config import config
+from utils.utils import config_keras_backend, clear_keras_session
 from utils.dataset import get_dataset
 from models.adamw import AdamW
 
@@ -19,15 +20,6 @@ $ python3 evaluate.py --dataset_dir ${HOME}/data/ILSVRC2012/tfrecords \
                       --batch_size  64 \
                       saves/mobilenet_v2-model-final.h5
 """
-
-
-def config_keras_backend():
-    """Config tensorflow backend to use less GPU memory."""
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    #config.gpu_options.per_process_gpu_memory_fraction = 0.5
-    session = tf.Session(config=config)
-    tf.keras.backend.set_session(session)
 
 
 def main():
@@ -50,6 +42,7 @@ def main():
         x=ds_validation,
         steps=50000 // args.batch_size)
     print('test loss, test acc:', results)
+    clear_keras_session()
 
 
 if __name__ == '__main__':

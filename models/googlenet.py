@@ -1,12 +1,10 @@
-"""GoogLeNetX model for Keras.
+"""GoogLeNet based models for Keras.
 
 The code is adapted from keras_applications' InceptionV3 code.  This
-'GoogLeNetX' implementation differs from the original GoogLeNet in
-several ways:
+'GoogLeNetBN' implementation differs from the original GoogLeNet in
+the following way:
 
-1. Number of filters are different in later layers.
-2. Ratio between 1x1, 3x3 and 5x5 filters is not the same.
-3. LRN layers are replaced by BatchNormalization layers.
+1. LRN layers are replaced by BatchNormalization layers.
 
 NOTE: This model is still experimental.  I expect to keep modifying
 it for a while.
@@ -66,30 +64,32 @@ def conv2d_bn(x,
     return x
 
 
-def inception(x,
-              nb_filters):
+def inception(x, filters):
     """Utility function to implement the inception module.
 
     # Arguments
         x: input tensor.
-        nb_filters: number of output filters.
+        filters: a list of filter sizes.
 
     # Returns
         Output tensor after applying the inception.
     """
-    if nb_filters % 16 != 0:
-        raise ValueError('nb_filters must be a multiple of 16')
-    branch1x1 = conv2d_bn(x, nb_filters // 4, (1, 1))
+    if len(filters) != 4:
+        raise ValueError('filters should have 4 components')
+    if len(filters[1]) != 2 and len(filters[2]) != 2:
+        raise ValueError('incorrect spec of filters')
 
-    branch3x3 = conv2d_bn(x, nb_filters // 4, (1, 1))
-    branch3x3 = conv2d_bn(branch3x3, nb_filters // 2, (3, 3))
+    branch1x1 = conv2d_bn(x, filters[0], (1, 1))
 
-    branch5x5 = conv2d_bn(x, nb_filters // 16, (1, 1))
-    branch5x5 = conv2d_bn(branch5x5, nb_filters // 8, (5, 5))
+    branch3x3 = conv2d_bn(x, filters[1][0], (1, 1))
+    branch3x3 = conv2d_bn(branch3x3, filters[1][1], (3, 3))
+
+    branch5x5 = conv2d_bn(x, filters[2][0], (1, 1))
+    branch5x5 = conv2d_bn(branch5x5, filters[2][1], (5, 5))
 
     branchpool = layers.MaxPooling2D(
         pool_size=(3, 3), strides=(1, 1), padding='same')(x)
-    branchpool = conv2d_bn(branchpool, nb_filters // 8, (1, 1))
+    branchpool = conv2d_bn(branchpool, filters[3], (1, 1))
 
     if backend.image_data_format() == 'channels_first':
         concat_axis = 1
@@ -100,14 +100,14 @@ def inception(x,
     return x
 
 
-def GoogLeNetX(include_top=False,
-               weights=None,
-               input_tensor=None,
-               input_shape=None,
-               pooling=None,
-               classes=1000,
-               **kwargs):
-    """Instantiates the GoogLeNetX architecture.
+def GoogLeNetBN(include_top=False,
+                weights=None,
+                input_tensor=None,
+                input_shape=None,
+                pooling=None,
+                classes=1000,
+                **kwargs):
+    """Instantiates the GoogLeNetBN architecture.
 
     # Arguments
         include_top: whether to include the fully-connected
@@ -149,19 +149,24 @@ def GoogLeNetX(include_top=False,
 
     x = conv2d_bn(img_input, 64, (7, 7), strides=(2, 2))
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
+
+    x = conv2d_bn(x, 64, (1, 1))
     x = conv2d_bn(x, 192, (3, 3))
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
-    x = inception(x, 256)   # inception3a: 28x28x256
-    x = inception(x, 480)   # inception3b: 28x28x480
+
+    x = inception(x, ( 64,  (96,128), (16,32), 32))    # 3a: 28x28x256
+    x = inception(x, (128, (128,192), (32,96), 64))    # 3b: 28x28x480
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
-    x = inception(x, 512)   # inception4a: 14x14x512
-    x = inception(x, 512)   # inception4b: 14x14x512
-    x = inception(x, 512)   # inception4c: 14x14x512
-    x = inception(x, 528)   # inception4d: 14x14x528
-    x = inception(x, 832)   # inception4e: 14x14x832
+
+    x = inception(x, (192,  (96,208),  (16,48),  64))  # 4a: 14x14x512
+    x = inception(x, (160, (112,224),  (24,64),  64))  # 4b: 14x14x512
+    x = inception(x, (128, (128,256),  (24,64),  64))  # 4c: 14x14x512
+    x = inception(x, (112, (144,288),  (32,64),  64))  # 4d: 14x14x528
+    x = inception(x, (256, (160,320), (32,128), 128))  # 4e: 14x14x832
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
-    x = inception(x, 832)   # inception5a: 7x7x832
-    x = inception(x, 1024)  # inception5b: 7x7x102
+
+    x = inception(x, (256, (160,320), (32,128), 128))  # 5a: 7x7x832
+    x = inception(x, (384, (192,384), (48,128), 128))  # 5b: 7x7x1024
 
     if include_top:
         # Classification block
@@ -181,6 +186,6 @@ def GoogLeNetX(include_top=False,
     else:
         inputs = img_input
     # Create model.
-    model = models.Model(inputs, x, name='googlenetx')
+    model = models.Model(inputs, x, name='googlenet_bn')
 
     return model

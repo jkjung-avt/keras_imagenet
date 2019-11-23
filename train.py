@@ -11,6 +11,7 @@ import argparse
 import tensorflow as tf
 
 from config import config
+from utils.utils import config_keras_backend, clear_keras_session
 from utils.dataset import get_dataset
 from models.models import get_batch_size
 from models.models import get_iter_size
@@ -36,24 +37,8 @@ $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
                    mobilenet_v2
 """
 SUPPORTED_MODELS = (
-    '"mobilenet_v2", "resnet50", "googlenetx" or just specify '
+    '"mobilenet_v2", "resnet50", "googlenet_bn" or just specify '
     'a saved Keras model (.h5) file')
-
-
-def config_keras_backend():
-    """Config tensorflow backend to use less GPU memory."""
-    config = tf.ConfigProto()
-    config.gpu_options.allow_growth = True
-    session = tf.Session(config=config)
-    tf.keras.backend.set_session(session)
-
-
-def clear_keras_session():
-    """Clear keras session.
-
-    This is for avoiding the problem of: 'Exception ignored in: <bound method BaseSession.__del__ of <tensorflow.python.client.session.Session object ...'
-    """
-    tf.keras.backend.clear_session()
 
 
 def train(model_name, optim_name, use_lookahead,

@@ -3,14 +3,14 @@
 Implemented models:
     1. MobileNetV2 ('mobilenet_v2')
     2. ResNet50 ('resnet50')
-    3. GoogLeNetX ('googlenetx'): a modified implementation of GoogLeNet
+    3. GoogLeNetBN ('googlenet_bn')
 """
 
 
 import tensorflow as tf
 
 from config import config
-from .googlenetx import GoogLeNetX
+from .googlenet import GoogLeNetBN
 from .adamw import AdamW
 from .optimizer import convert_to_accum_optimizer
 from .optimizer import convert_to_lookahead_optimizer
@@ -53,7 +53,7 @@ def get_batch_size(model_name, value):
         return 64
     elif 'resnet50' in model_name:
         return 16
-    elif 'googlenetx' in model_name:
+    elif 'googlenet_bn' in model_name:
         return 64
     else:
         raise ValueError
@@ -71,7 +71,7 @@ def get_iter_size(model_name, value):
         return 4
     elif 'resnet50' in model_name:
         return 16
-    elif 'googlenetx' in model_name:
+    elif 'googlenet_bn' in model_name:
         return 4
     else:
         raise ValueError
@@ -157,8 +157,8 @@ def get_training_model(model_name, optimizer, use_lookahead,
         elif model_name == 'resnet50':
             backbone = tf.keras.applications.resnet50.ResNet50(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'googlenetx':
-            backbone = GoogLeNetX(
+        elif model_name == 'googlenet_bn':
+            backbone = GoogLeNetBN(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         else:
             raise ValueError

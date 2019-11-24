@@ -326,7 +326,7 @@ def preprocess_for_train(image,
   """
   with tf.name_scope(scope, 'distort_image', [image, height, width, bbox]):
     assert image.dtype == tf.float32
-    # random rotatation of image between -20 to 20 degrees with 0.75 prob
+    # random rotatation of image between -15 to 15 degrees with 0.75 prob
     angle = random.uniform(-max_angle, max_angle) \
             if random.random() < 0.75 else 0.
     rotated_image = tf.contrib.image.rotate(image, math.radians(angle),

@@ -5,13 +5,14 @@ This repository contains code I use to train ImageNet (ILSVRC2012) image classif
 
 **Highlight #1**: I use [TFRecords](https://www.tensorflow.org/tutorials/load_data/tf_records) and [tf.data.TFRecordDataset API](https://www.tensorflow.org/api_docs/python/tf/data/TFRecordDataset) to speed up data ingestion of the training pipeline.  This way I could multi-process the data pre-processing (including online data augmentation) task, and keep the GPUs maximally utilized.
 
-**Highlight #2**: In addition to heavy data augmentation, I also use various tricks in attempt to achieve best accuracy for the trained image classification models.  More specifically, I implement 'iter_size' and 'l2 regularization' for the Keras model, and have tried to use 'AdamW' (Adam optimizer with decoupled weight decay).
+**Highlight #2**: In addition to heavy data augmentation, I also use various tricks in attempt to achieve best accuracy for the trained image classification models.  More specifically, I implement 'LookAhead' optimizer ([reference](https://arxiv.org/abs/1907.08610)), 'iter_size' and 'l2 regularization' for the Keras models, and have tried to use 'AdamW' (Adam optimizer with decoupled weight decay).
 
 I took most of the dataset preparation code from tensorflow [models/research/inception](https://github.com/tensorflow/models/tree/master/research/inception).  It was under Apache license as specified [here](https://github.com/tensorflow/models/blob/master/LICENSE).
 
-Otherwise, please refer to the following blog post of mine for some more implementation details about the code:
+Otherwise, please refer to the following blog posts for some more implementation details about the code:
 
-[Training Keras Models with TFRecords and The tf.data API](https://jkjung-avt.github.io/tfrecords-for-keras/)
+* [Training Keras Models with TFRecords and The tf.data API](https://jkjung-avt.github.io/tfrecords-for-keras/)
+* [Displaying Images in TensorBoard](https://jkjung-avt.github.io/tensorboard-images/)
 
 # Prerequisite
 
@@ -84,12 +85,13 @@ In addition, the python code in this repository is for python3.  Make sure you h
    Here is a list of options for the `train.py` script:
 
    * `--optimizer`: 'sgd', 'adam' or 'rmsprop'
+   * `--use_lookahead`: use 'LookAhead' optimizer, default is False
    * `--batch_size`: batch size for both training and validation
-   * `--iter_size`: aggregating gradients before doing 1 weight update, i.e. effective batch size = batch_size * iter_size
+   * `--iter_size`: aggregate gradients before doing 1 weight update, i.e. effective batch size = batch_size * iter_size
    * `--lr_sched`: 'linear' or 'exp' (exponential) decay of learning rate per epoch
    * `--initial_lr`: initial learning rate
-   * `--final_lr`: final learning rate (for 'linear' lr_sched)
-   * `--lr_decay`: decaying factor for learning rate (for 'exp' lr_sched)
+   * `--final_lr`: final learning rate (for 'linear' lr_sched only)
+   * `--lr_decay`: decaying factor for learning rate (for 'exp' lr_sched only)
    * `--weight_decay`: L2 regularization of weights in conv/dense layers
    * `--epochs`: total number of training epochs
 

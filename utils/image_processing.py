@@ -34,9 +34,6 @@ import tensorflow as tf
 from tensorflow.python.ops import control_flow_ops
 
 
-_RESIZE_SIDE = 224
-
-
 def _smallest_size_at_least(height, width, smallest_side):
   """Computes new shape with the smallest side equal to `smallest_side`.
 
@@ -290,6 +287,31 @@ def distorted_bounding_box_crop(image,
     return cropped_image, distort_bbox
 
 
+def resize_and_rescale_image(image, height, width,
+                             do_mean_subtraction=True, scope=None):
+    """Prepare one image for training/evaluation.
+
+    Args:
+        image: 3-D float Tensor
+        height: integer
+        width: integer
+        scope: Optional scope for name_scope.
+    Returns:
+        3-D float Tensor of prepared image.
+    """
+    with tf.name_scope(values=[image, height, width], name=scope,
+                       default_name='resize_image'):
+        image = tf.expand_dims(image, 0)
+        image = tf.image.resize_bilinear(image, [height, width],
+                                         align_corners=False)
+        image = tf.squeeze(image, [0])
+        if do_mean_subtraction:
+            # rescale to [-1,1]
+            image = tf.subtract(image, 0.5)
+            image = tf.multiply(image, 2.0)
+    return image
+
+
 def preprocess_for_train(image,
                          height,
                          width,
@@ -353,9 +375,9 @@ def preprocess_for_train(image,
         lambda x, method: tf.image.resize_images(x, [height, width], method),
         num_cases=num_resize_cases)
 
-    if add_image_summaries:
-      tf.summary.image('training_image',
-                       tf.expand_dims(distorted_image, 0))
+    #if add_image_summaries:
+    #  tf.summary.image('training_image',
+    #                   tf.expand_dims(distorted_image, 0))
 
     # Randomly flip the image horizontally.
     distorted_image = tf.image.random_flip_left_right(distorted_image)
@@ -367,9 +389,10 @@ def preprocess_for_train(image,
         lambda x, ordering: distort_color(x, ordering, fast_mode),
         num_cases=num_distort_cases)
 
-    if add_image_summaries:
-      tf.summary.image('final_distorted_image',
-                       tf.expand_dims(distorted_image, 0))
+    #if add_image_summaries:
+    #  tf.summary.image('final_distorted_image',
+    #                   tf.expand_dims(distorted_image, 0))
+
     distorted_image = tf.subtract(distorted_image, 0.5)
     distorted_image = tf.multiply(distorted_image, 2.0)
     return distorted_image
@@ -395,11 +418,15 @@ def preprocess_for_eval(image,
   """
   with tf.name_scope(scope, 'eval_image', [image, height, width]):
     assert image.dtype == tf.float32
-    image = _aspect_preserving_resize(image, _RESIZE_SIDE)
+    #image = resize_and_rescale_image(image, 256, 256,
+    #                                 do_mean_subtraction=False)
+    image = _aspect_preserving_resize(image, max(height, width))
     image = _central_crop([image], height, width)[0]
     image.set_shape([height, width, 3])
-    if add_image_summaries:
-      tf.summary.image('validation_image', tf.expand_dims(image, 0))
+
+    #if add_image_summaries:
+    #  tf.summary.image('validation_image', tf.expand_dims(image, 0))
+
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0)
     return image

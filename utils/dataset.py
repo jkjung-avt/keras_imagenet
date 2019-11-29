@@ -11,7 +11,7 @@ from functools import partial
 import tensorflow as tf
 
 from config import config
-from utils.image_processing import preprocess_image
+from utils.image_processing import preprocess_image, resize_and_rescale_image
 
 
 def decode_jpeg(image_buffer, scope=None):
@@ -38,29 +38,6 @@ def decode_jpeg(image_buffer, scope=None):
         # float.
         image = tf.image.convert_image_dtype(image, dtype=tf.float32)
         return image
-
-
-def resize_and_rescale_image(image, height, width, scope=None):
-    """Prepare one image for training/evaluation.
-
-    Args:
-        image: 3-D float Tensor
-        height: integer
-        width: integer
-        scope: Optional scope for name_scope.
-    Returns:
-        3-D float Tensor of prepared image.
-    """
-    with tf.name_scope(values=[image, height, width], name=scope,
-                       default_name='resize_image'):
-        image = tf.expand_dims(image, 0)
-        image = tf.image.resize_bilinear(image, [height, width],
-                                         align_corners=False)
-        image = tf.squeeze(image, [0])
-        # rescale to [-1,1]
-        image = tf.subtract(image, 0.5)
-        image = tf.multiply(image, 2.0)
-    return image
 
 
 def _parse_fn(example_serialized, is_training):

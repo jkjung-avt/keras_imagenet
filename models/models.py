@@ -165,8 +165,12 @@ def get_training_model(model_name, optimizer, use_lookahead,
         # Add a Dropout layer before the final Dense output
         x = tf.keras.layers.GlobalAveragePooling2D()(backbone.output)
         x = tf.keras.layers.Dropout(0.5)(x)
+        kernel_initializer = tf.random_normal_initializer(mean=0.0, stddev=0.02)
+        bias_initializer = tf.constant_initializer(value=0.0)
         x = tf.keras.layers.Dense(
-            NUM_CLASSES, activation='softmax', name='Logits')(x)
+            NUM_CLASSES, activation='softmax', name='Logits',
+            kernel_initializer=kernel_initializer,
+            bias_initializer=bias_initializer)(x)
         model = tf.keras.models.Model(inputs=backbone.input, outputs=x)
 
     if weight_decay > 0.:

@@ -170,14 +170,14 @@ def GoogLeNetBN(include_top=False,
 
     if include_top:
         # Classification block
-        x = layers.GlobalAveragePooling2D(name='avg_pool')(x)
+        if pooling == 'avg':
+            x = layers.GlobalAveragePooling2D(name='global_pool')(x)
+        elif pooling == 'max':
+            x = layers.GlobalMaxPooling2D(name='global_pool')(x)
+        else:
+            raise ValueError('bad spec of global pooling')
         x = layers.Dropout(0.4)(x)
         x = layers.Dense(classes, activation='softmax', name='predictions')(x)
-    else:
-        if pooling == 'avg':
-            x = layers.GlobalAveragePooling2D()(x)
-        elif pooling == 'max':
-            x = layers.GlobalMaxPooling2D()(x)
 
     # Ensure that the model takes into account
     # any potential predecessors of `input_tensor`.
@@ -185,6 +185,7 @@ def GoogLeNetBN(include_top=False,
         inputs = keras_utils.get_source_inputs(input_tensor)
     else:
         inputs = img_input
+
     # Create model.
     model = models.Model(inputs, x, name='googlenet_bn')
 

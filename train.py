@@ -41,8 +41,8 @@ SUPPORTED_MODELS = (
     'a saved Keras model (.h5) file')
 
 
-def train(model_name, optim_name, use_lookahead,
-          batch_size, iter_size,
+def train(model_name, optim_name, add_dropout,
+          use_lookahead, batch_size, iter_size,
           lr_sched, initial_lr, final_lr, lr_decay,
           weight_decay, epochs, dataset_dir):
     """Prepare data and train the model."""
@@ -72,6 +72,7 @@ def train(model_name, optim_name, use_lookahead,
     # build model and do training
     model = get_training_model(
         model_name=model_name,
+        add_dropout=add_dropout,
         optimizer=optimizer,
         use_lookahead=use_lookahead,
         iter_size=iter_size,
@@ -96,6 +97,7 @@ def main():
                         default=config.DEFAULT_DATASET_DIR)
     parser.add_argument('--optimizer', type=str, default='adam',
                         choices=['sgd', 'adam', 'rmsprop'])
+    parser.add_argument('--add_dropout', action='store_true')
     parser.add_argument('--use_lookahead', action='store_true')
     parser.add_argument('--batch_size', type=int, default=-1)
     parser.add_argument('--iter_size', type=int, default=-1)
@@ -117,8 +119,8 @@ def main():
     os.makedirs(config.SAVE_DIR, exist_ok=True)
     os.makedirs(config.LOG_DIR, exist_ok=True)
     config_keras_backend()
-    train(args.model, args.optimizer, args.use_lookahead,
-          args.batch_size, args.iter_size,
+    train(args.model, args.optimizer, args.add_dropout,
+          args.use_lookahead, args.batch_size, args.iter_size,
           args.lr_sched, args.initial_lr, args.final_lr, args.lr_decay,
           args.weight_decay, args.epochs, args.dataset_dir)
     clear_keras_session()

@@ -141,8 +141,8 @@ def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-1):
         raise ValueError
 
 
-def get_training_model(model_name, optimizer, use_lookahead,
-                       iter_size, weight_decay):
+def get_training_model(model_name, add_dropout, optimizer,
+                       use_lookahead, iter_size, weight_decay):
     """Build the model to be trained."""
     if model_name.endswith('.h5'):
         # load a saved model
@@ -164,7 +164,8 @@ def get_training_model(model_name, optimizer, use_lookahead,
             raise ValueError
         # Add a Dropout layer before the final Dense output
         x = tf.keras.layers.GlobalAveragePooling2D()(backbone.output)
-        x = tf.keras.layers.Dropout(0.5)(x)
+        if add_dropout:
+            x = tf.keras.layers.Dropout(0.5)(x)
         kernel_initializer = tf.random_normal_initializer(mean=0.0, stddev=0.02)
         bias_initializer = tf.constant_initializer(value=0.0)
         x = tf.keras.layers.Dense(

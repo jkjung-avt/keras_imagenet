@@ -86,6 +86,8 @@ In addition, the python code in this repository is for python3.  Make sure you h
 
    On my desktop PC with an NVIDIA GTX-1080 Ti GPU, it takes 7~8 days to train this model for 60 epochs.  And top-1 accuracy of this [trained googelnet_bn model](https://drive.google.com/open?id=1-f06EebkIldPADxrZiEeQad8kiNZ6x5g) is 0.6954.
 
+   NOTE: I do random rotation of training images, which actually slows down data ingestion quite a bit.  If you don't need random rotation as one of the data augmentation schemes, you could comment out [the code](https://github.com/jkjung-avt/keras_imagenet/blob/master/utils/image_processing.py#L354) to speed up training.
+
    For reference, here is a list of options for the `train.py` script which gets called inside `train_googlenet_bn.sh`:
 
    * `--add_dropout`: add a DropOut(0.5) layer before the last Dense layer, default is False
@@ -100,7 +102,6 @@ In addition, the python code in this repository is for python3.  Make sure you h
    * `--weight_decay`: L2 regularization of weights in conv/dense layers
    * `--epochs`: total number of training epochs
 
-   
 7. Evaluate accuracy of the trained googlenet_bn model.
 
    ```shell

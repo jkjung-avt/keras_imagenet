@@ -1,21 +1,10 @@
 #!/bin/bash
+
 set -xe
 
-# Train mobilenet_v2 ILSVRC2012 model in 4 stages.
-# Total 50 * 4 = 200 epochs.
+# Train mobilenet_v2 ILSVRC2012 model in 60 epochs
+# Learning rates: exponential decay from 0.045 to 1e-5
 
-python3 train.py --batch_size 64 --iter_size 4 --initial_lr 3e-4 --final_lr 1e-6 --weight_decay 0.0025 --epochs 20 mobilenet_v2
+python3 train.py --optimizer adam --batch_size 64 --iter_size 1 --lr_sched exp --initial_lr 0.045 --lr_decay 0.8691868050680678 --weight_decay 4e-5 --epochs 60 mobilenet_v2
 
-cp saves/mobilenet_v2-model-final.h5 saves/mobilenet_v2-stage1.h5
-
-python3 train.py --batch_size 64 --iter_size 4 --initial_lr 3e-4 --final_lr 1e-6 --weight_decay 0.0025 --epochs 40 saves/mobilenet_v2-stage1.h5
-
-cp saves/mobilenet_v2-model-final.h5 saves/mobilenet_v2-stage2.h5
-
-python3 train.py --batch_size 64 --iter_size 4 --initial_lr 3e-4 --final_lr 1e-6 --weight_decay 0.0025 --epochs 60 saves/mobilenet_v2-stage2.h5
-
-cp saves/mobilenet_v2-model-final.h5 saves/mobilenet_v2-stage3.h5
-
-python3 train.py --batch_size 64 --iter_size 4 --initial_lr 3e-4 --final_lr 1e-6 --weight_decay 0.0025 --epochs 80 saves/mobilenet_v2-stage3.h5
-
-cp saves/mobilenet_v2-model-final.h5 saves/mobilenet_v2-stage4.h5
+cp saves/mobilenet_v2-model-final.h5 saves/modelnet_v2-stage1.h5

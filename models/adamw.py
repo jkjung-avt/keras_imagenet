@@ -9,11 +9,10 @@ from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import state_ops
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.optimizers import Optimizer
-from tensorflow.python.keras.utils.generic_utils import serialize_keras_object, deserialize_keras_object
 
 
 class AdamW(Optimizer):
-    """Adam optimizer.
+    """AdamW optimizer.
     Default parameters follow those provided in the original paper.
     # Arguments
         lr: float >= 0. Learning rate.

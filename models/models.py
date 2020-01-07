@@ -11,6 +11,7 @@ import tensorflow as tf
 
 from config import config
 from .googlenet import GoogLeNetBN
+from .efficientnet import EfficientNetB0
 from .adamw import AdamW
 from .optimizer import convert_to_accum_optimizer
 from .optimizer import convert_to_lookahead_optimizer
@@ -159,6 +160,9 @@ def get_training_model(model_name, add_dropout, optimizer,
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         elif model_name == 'googlenet_bn':
             backbone = GoogLeNetBN(
+                input_shape=IN_SHAPE, include_top=False, weights=None)
+        elif model_name == 'efficientnet_b0':
+            backbone = EfficientNetB0(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         else:
             raise ValueError

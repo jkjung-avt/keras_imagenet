@@ -26,6 +26,7 @@ from models.models import get_training_model
 
 DESCRIPTION = """For example:
 $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
+                   --dropout_rate 0.4 \
                    --optimizer    adam \
                    --batch_size   64 \
                    --iter_size    4 \
@@ -41,7 +42,7 @@ SUPPORTED_MODELS = (
     'or just specify a saved Keras model (.h5) file')
 
 
-def train(model_name, optim_name, add_dropout,
+def train(model_name, dropout_rate, optim_name,
           use_lookahead, batch_size, iter_size,
           lr_sched, initial_lr, final_lr, lr_decay,
           weight_decay, epochs, dataset_dir):
@@ -72,7 +73,7 @@ def train(model_name, optim_name, add_dropout,
     # build model and do training
     model = get_training_model(
         model_name=model_name,
-        add_dropout=add_dropout,
+        dropout_rate=dropout_rate,
         optimizer=optimizer,
         use_lookahead=use_lookahead,
         iter_size=iter_size,
@@ -95,9 +96,9 @@ def main():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
     parser.add_argument('--dataset_dir', type=str,
                         default=config.DEFAULT_DATASET_DIR)
+    parser.add_argument('--dropout_rate', type=float, default=0.0)
     parser.add_argument('--optimizer', type=str, default='adam',
                         choices=['sgd', 'adam', 'rmsprop'])
-    parser.add_argument('--add_dropout', action='store_true')
     parser.add_argument('--use_lookahead', action='store_true')
     parser.add_argument('--batch_size', type=int, default=-1)
     parser.add_argument('--iter_size', type=int, default=-1)
@@ -119,7 +120,7 @@ def main():
     os.makedirs(config.SAVE_DIR, exist_ok=True)
     os.makedirs(config.LOG_DIR, exist_ok=True)
     config_keras_backend()
-    train(args.model, args.optimizer, args.add_dropout,
+    train(args.model, args.dropout_rate, args.optimizer,
           args.use_lookahead, args.batch_size, args.iter_size,
           args.lr_sched, args.initial_lr, args.final_lr, args.lr_decay,
           args.weight_decay, args.epochs, args.dataset_dir)

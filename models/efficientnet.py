@@ -586,6 +586,126 @@ def EfficientNetB7(include_top=True,
                         **kwargs)
 
 
+def EfficientNetB0_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(1.0, 1.0, 224, 0.2,
+                        model_name='efficientnet-b0',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
+def EfficientNetB1_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(1.0, 1.1, 224, 0.2,
+                        model_name='efficientnet-b1',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
+def EfficientNetB2_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(1.1, 1.2, 224, 0.3,
+                        model_name='efficientnet-b2',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
+def EfficientNetB3_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(1.2, 1.4, 224, 0.3,
+                        model_name='efficientnet-b3',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
+def EfficientNetB4_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(1.4, 1.8, 224, 0.4,
+                        model_name='efficientnet-b4',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
+def EfficientNetB5_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(1.6, 2.2, 224, 0.4,
+                        model_name='efficientnet-b5',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
+def EfficientNetB6_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(1.8, 2.6, 224, 0.5,
+                        model_name='efficientnet-b6',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
+def EfficientNetB7_224x224(include_top=True,
+                           weights='imagenet',
+                           input_tensor=None,
+                           input_shape=None,
+                           pooling=None,
+                           classes=1000,
+                           **kwargs):
+    return EfficientNet(2.0, 3.1, 224, 0.5,
+                        model_name='efficientnet-b7',
+                        include_top=include_top, weights=weights,
+                        input_tensor=input_tensor, input_shape=input_shape,
+                        pooling=pooling, classes=classes,
+                        **kwargs)
+
+
 setattr(EfficientNetB0, '__doc__', EfficientNet.__doc__)
 setattr(EfficientNetB1, '__doc__', EfficientNet.__doc__)
 setattr(EfficientNetB2, '__doc__', EfficientNet.__doc__)
@@ -594,3 +714,11 @@ setattr(EfficientNetB4, '__doc__', EfficientNet.__doc__)
 setattr(EfficientNetB5, '__doc__', EfficientNet.__doc__)
 setattr(EfficientNetB6, '__doc__', EfficientNet.__doc__)
 setattr(EfficientNetB7, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB0_224x224, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB1_224x224, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB2_224x224, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB3_224x224, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB4_224x224, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB5_224x224, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB6_224x224, '__doc__', EfficientNet.__doc__)
+setattr(EfficientNetB7_224x224, '__doc__', EfficientNet.__doc__)

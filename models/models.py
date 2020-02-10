@@ -4,6 +4,9 @@ Implemented models:
     1. MobileNetV2 ('mobilenet_v2')
     2. ResNet50 ('resnet50')
     3. GoogLeNetBN ('googlenet_bn')
+    4. EfficientNetB0_224x224 ('efficientnet_b0')
+    5. EfficientNetB1_224x224 ('efficientnet_b1')
+    6. EfficientNetB4_224x224 ('efficientnet_b4')
 """
 
 
@@ -11,7 +14,7 @@ import tensorflow as tf
 
 from config import config
 from .googlenet import GoogLeNetBN
-from .efficientnet import EfficientNetB0
+from .efficientnet import EfficientNetB0, EfficientNetB4
 from .adamw import AdamW
 from .optimizer import convert_to_accum_optimizer
 from .optimizer import convert_to_lookahead_optimizer
@@ -162,7 +165,13 @@ def get_training_model(model_name, dropout_rate, optimizer,
             backbone = GoogLeNetBN(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         elif model_name == 'efficientnet_b0':
-            backbone = EfficientNetB0(
+            backbone = EfficientNetB0_224x224(
+                input_shape=IN_SHAPE, include_top=False, weights=None)
+        elif model_name == 'efficientnet_b1':
+            backbone = EfficientNetB1_224x224(
+                input_shape=IN_SHAPE, include_top=False, weights=None)
+        elif model_name == 'efficientnet_b4':
+            backbone = EfficientNetB4_224x224(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         else:
             raise ValueError

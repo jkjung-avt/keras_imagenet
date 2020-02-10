@@ -29,17 +29,18 @@ $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
                    --dropout_rate 0.4 \
                    --optimizer    adam \
                    --batch_size   64 \
-                   --iter_size    4 \
-                   --lr_sched     linear \
+                   --iter_size    1 \
+                   --lr_sched     exp \
                    --initial_lr   1e-2 \
-                   --final_lr     1e-4 \
-                   --weight_decay 1e-5 \
+                   --lr_decay 0.8576958985908941 \
                    --epochs       60 \
-                   mobilenet_v2
+                   --weight_decay 1e-4 \
+                   googlenet_bn
 """
 SUPPORTED_MODELS = (
-    '"mobilenet_v2", "resnet50", "googlenet_bn", "efficientnet_b0" '
-    'or just specify a saved Keras model (.h5) file')
+    '"mobilenet_v2", "resnet50", "googlenet_bn", "efficientnet_b0", '
+    '"efficientnet_b1", "efficientnet_b4" or just specify a saved '
+    'Keras model (.h5) file')
 
 
 def train(model_name, dropout_rate, optim_name,

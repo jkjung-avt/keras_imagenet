@@ -148,14 +148,14 @@ def GoogLeNetBN(include_top=False,
             img_input = input_tensor
 
     x = conv2d_bn(img_input, 64, (7, 7), strides=(2, 2))
-    x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='valid')(x)
+    x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
 
     x = conv2d_bn(x,  64, (1, 1))
     x = conv2d_bn(x, 192, (3, 3))
-    x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='valid')(x)
+    x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
 
-    x = inception(x, ( 64,  (96, 128), (16,  32),  32))  # 3a: 27x27x256
-    x = inception(x, (128, (128, 192), (32,  96),  64))  # 3b: 27x27x480
+    x = inception(x, ( 64,  (96, 128), (16,  32),  32))  # 3a: 28x28x256
+    x = inception(x, (128, (128, 192), (32,  96),  64))  # 3b: 28x28x480
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same')(x)
 
     x = inception(x, (192,  (96, 208), (16,  48),  64))  # 4a: 14x14x512

@@ -20,7 +20,7 @@ from models.models import get_initial_lr
 from models.models import get_final_lr
 from models.models import get_lr_decay
 from models.models import get_weight_decay
-from models.models import get_optimizer
+from models.models import get_optimizer2
 from models.models import get_training_model
 
 
@@ -52,7 +52,7 @@ def train(model_name, dropout_rate, optim_name,
     initial_lr   = get_initial_lr(model_name, initial_lr)
     final_lr     = get_final_lr(model_name, final_lr)
     lr_decay     = get_lr_decay(model_name, lr_decay)
-    optimizer    = get_optimizer(model_name, optim_name, initial_lr)
+    optimizer    = get_optimizer2(model_name, optim_name, initial_lr, iter_size)
     weight_decay = get_weight_decay(model_name, weight_decay)
 
     # get training and validation data

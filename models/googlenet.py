@@ -76,7 +76,7 @@ def inception(x, filters):
     """
     if len(filters) != 4:
         raise ValueError('filters should have 4 components')
-    if len(filters[1]) != 2 and len(filters[2]) != 2:
+    if len(filters[1]) != 2 or len(filters[2]) != 2:
         raise ValueError('incorrect spec of filters')
 
     branch1x1 = conv2d_bn(x, filters[0], (1, 1))
@@ -87,7 +87,7 @@ def inception(x, filters):
     branch5x5 = conv2d_bn(x, filters[2][0], (1, 1))
     branch5x5 = conv2d_bn(branch5x5, filters[2][1], (5, 5))
 
-    branchpool = layers.MaxPooling2D(
+    branchpool = layers.AveragePooling2D(
         pool_size=(3, 3), strides=(1, 1), padding='same')(x)
     branchpool = conv2d_bn(branchpool, filters[3], (1, 1))
 

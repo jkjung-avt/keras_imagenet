@@ -14,6 +14,7 @@ import tensorflow as tf
 
 from config import config
 from .googlenet import GoogLeNetBN
+from .inception_v2 import InceptionV2
 from .efficientnet import EfficientNetB0, EfficientNetB4
 from .adamw import AdamW
 from .optimizer import convert_to_accum_optimizer
@@ -163,6 +164,9 @@ def get_training_model(model_name, dropout_rate, optimizer,
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         elif model_name == 'googlenet_bn':
             backbone = GoogLeNetBN(
+                input_shape=IN_SHAPE, include_top=False, weights=None)
+        elif model_name == 'inception_v2':
+            backbone = InceptionV2(
                 input_shape=IN_SHAPE, include_top=False, weights=None)
         elif model_name == 'efficientnet_b0':
             backbone = EfficientNetB0_224x224(

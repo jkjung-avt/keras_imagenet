@@ -80,7 +80,9 @@ def _parse_fn(example_serialized, is_training):
         image = preprocess_image(image, 224, 224, is_training=is_training)
     else:
         image = resize_and_rescale_image(image, 224, 224)
-    label = tf.one_hot(parsed['image/class/label'], 1000, dtype=tf.float32)
+    # The label in the tfrecords is 1~1000 (0 not used).
+    # So I think the minus 1 is needed below.
+    label = tf.one_hot(parsed['image/class/label'] - 1, 1000, dtype=tf.float32)
     return (image, label)
 
 

@@ -15,7 +15,9 @@ import tensorflow as tf
 from config import config
 from .googlenet import GoogLeNetBN
 from .inception_v2 import InceptionV2
-from .efficientnet import EfficientNetB0, EfficientNetB4
+from .efficientnet import EfficientNetB0_224x224
+from .efficientnet import EfficientNetB1_224x224
+from .efficientnet import EfficientNetB4_224x224
 from .adamw import AdamW
 from .optimizer import convert_to_accum_optimizer
 from .optimizer import convert_to_lookahead_optimizer
@@ -156,29 +158,18 @@ def get_training_model(model_name, dropout_rate, optimizer,
             custom_objects={'AdamW': AdamW})
     else:
         # initialize the model from scratch
-        if model_name == 'mobilenet_v2':
-            backbone = tf.keras.applications.mobilenet_v2.MobileNetV2(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'resnet50':
-            backbone = tf.keras.applications.resnet50.ResNet50(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'googlenet_bn':
-            backbone = GoogLeNetBN(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'inception_v2':
-            backbone = InceptionV2(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'efficientnet_b0':
-            backbone = EfficientNetB0_224x224(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'efficientnet_b1':
-            backbone = EfficientNetB1_224x224(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
-        elif model_name == 'efficientnet_b4':
-            backbone = EfficientNetB4_224x224(
-                input_shape=IN_SHAPE, include_top=False, weights=None)
-        else:
-            raise ValueError
+        model_class = {
+            'mobilenet_v2': tf.keras.applications.mobilenet_v2.MobileNetV2,
+            'resnet50': tf.keras.applications.resnet50.ResNet50,
+            'googlenet_bn': GoogLeNetBN,
+            'inception_v2': InceptionV2,
+            'efficientnet_b0': EfficientNetB0_224x224,
+            'efficientnet_b1': EfficientNetB1_224x224,
+            'efficientnet_b4': EfficientNetB4_224x224,
+        }[model_name]
+        backbone = model_class(
+            input_shape=IN_SHAPE, include_top=False, weights=None)
+
         # Add a Dropout layer before the final Dense output
         x = tf.keras.layers.GlobalAveragePooling2D()(backbone.output)
         if dropout_rate and dropout_rate > 0.0 and dropout_rate < 1.0:

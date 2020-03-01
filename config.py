@@ -2,11 +2,10 @@
 """
 
 import os
+import types
 
-from easydict import EasyDict as edict
 
-
-config = edict()
+config = types.SimpleNamespace()
 
 # Subdirectory name for saving trained weights and models
 config.SAVE_DIR = 'saves'

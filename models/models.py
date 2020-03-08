@@ -4,9 +4,11 @@ Implemented models:
     1. MobileNetV2 ('mobilenet_v2')
     2. ResNet50 ('resnet50')
     3. GoogLeNetBN ('googlenet_bn')
-    4. EfficientNetB0_224x224 ('efficientnet_b0')
-    5. EfficientNetB1_224x224 ('efficientnet_b1')
-    6. EfficientNetB4_224x224 ('efficientnet_b4')
+    4. InceptionV2 ('inception_v2')
+    5. EfficientNetB0_224x224 ('efficientnet_b0')
+    6. EfficientNetB1_224x224 ('efficientnet_b1')
+    7. EfficientNetB4_224x224 ('efficientnet_b4')
+    8. OSNet ('osnet')
 """
 
 
@@ -18,6 +20,7 @@ from .inception_v2 import InceptionV2
 from .efficientnet import EfficientNetB0_224x224
 from .efficientnet import EfficientNetB1_224x224
 from .efficientnet import EfficientNetB4_224x224
+from .osnet import OSNet
 from .adamw import AdamW
 from .optimizer import convert_to_accum_optimizer
 from .optimizer import convert_to_lookahead_optimizer
@@ -166,6 +169,7 @@ def get_training_model(model_name, dropout_rate, optimizer,
             'efficientnet_b0': EfficientNetB0_224x224,
             'efficientnet_b1': EfficientNetB1_224x224,
             'efficientnet_b4': EfficientNetB4_224x224,
+            'osnet': OSNet,
         }[model_name]
         backbone = model_class(
             input_shape=IN_SHAPE, include_top=False, weights=None)

@@ -39,8 +39,8 @@ $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
 """
 SUPPORTED_MODELS = (
     '"mobilenet_v2", "resnet50", "googlenet_bn", "inception_v2", '
-    '"efficientnet_b0", "efficientnet_b1", "efficientnet_b4" or '
-    'just specify a saved Keras model (.h5) file')
+    '"efficientnet_b0", "efficientnet_b1", "efficientnet_b4", '
+    '"osnet" or just specify a saved Keras model (.h5) file')
 
 
 def train(model_name, dropout_rate, optim_name,

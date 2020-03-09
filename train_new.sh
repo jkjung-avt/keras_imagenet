@@ -20,39 +20,41 @@ fi
 
 case $1 in
     mobilenet_v2 )
-        # Learning rates: exponential decay from 0.045 to 1e-5
-        python3 train.py --optimizer adam --batch_size 64 --iter_size 1 \
-                         --lr_sched exp --initial_lr 0.045 \
-                         --lr_decay 0.8691868050680678 \
-                         --weight_decay 4e-5 --epochs 60 mobilenet_v2
+        # Learning rates: exponential decay from 1e-2 to 1e-4
+        python3 train.py --dropout_rate 0.2 \
+                         --optimizer adam --batch_size 32 --iter_size 1 \
+                         --lr_sched exp --initial_lr 1e-2 \
+                         --lr_decay 0.9261187281287935 \
+                         --weight_decay 2e-4 --epochs 60 mobilenet_v2
         ;;
     resnet50 )
         # Learning rates: exponential decay from 1e-2 to 1e-5
-        python3 train.py --optimizer adam --batch_size 16 --iter_size 1 \
+        python3 train.py --dropout_rate 0.5 \
+                         --optimizer adam --batch_size 16 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 \
-                         --lr_decay 0.9172759353897796 \
-                         --weight_decay 1e-4 --epochs 80 resnet50
+                         --lr_decay 0.8912509381337456 \
+                         --weight_decay 2e-4 --epochs 80 resnet50
         ;;
     googlenet_bn )
-        # Learning rates: exponential decay from 1e-2 to 1e-6
-        python3 train.py --dropout_rate 0.4 --optimizer adam \
-                         --batch_size 64 --iter_size 1 \
+        # Learning rates: exponential decay from 1e-2 to 1e-5
+        python3 train.py --dropout_rate 0.4 \
+                         --optimizer adam --batch_size 32 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 \
-                         --lr_decay 0.8576958985908941 \
-                         --weight_decay 1e-4 --epochs 60 googlenet_bn
+                         --lr_decay 0.8912509381337456 \
+                         --weight_decay 2e-4 --epochs 60 googlenet_bn
         ;;
     inception_v2 )
-        # Learning rates: exponential decay from 1e-2 to 1e-6
-        python3 train.py --dropout_rate 0.2 --optimizer adam \
-                         --batch_size 64 --iter_size 1 \
+        # Learning rates: exponential decay from 1e-2 to 1e-5
+        python3 train.py --dropout_rate 0.4 \
+                         --optimizer adam --batch_size 32 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 \
-                         --lr_decay 0.8576958985908941 \
-                         --weight_decay 1e-4 --epochs 60 inception_v2
+                         --lr_decay 0.8912509381337456 \
+                         --weight_decay 2e-4 --epochs 60 inception_v2
         ;;
     efficientnet_b0 )
         # Learning rates: exponential decay from 1e-2 to 3e-5
-        python3 train.py --dropout_rate 0.2 --optimizer adam \
-                         --batch_size 64 --iter_size 1 \
+        python3 train.py --dropout_rate 0.2 \
+                         --optimizer adam --batch_size 64 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 \
                          --lr_decay 0.9077202433980235 \
                          --weight_decay 1e-4 --epochs 60 \
@@ -60,8 +62,8 @@ case $1 in
         ;;
     efficientnet_b1 )
         # Learning rates: exponential decay from 1e-2 to 3e-5
-        python3 train.py --dropout_rate 0.2 --optimizer adam \
-                         --batch_size 64 --iter_size 1 \
+        python3 train.py --dropout_rate 0.2 \
+                         --optimizer adam --batch_size 64 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 \
                          --lr_decay 0.9077202433980235 \
                          --weight_decay 1e-4 --epochs 60 \
@@ -69,8 +71,8 @@ case $1 in
         ;;
     efficientnet_b4 )
         # Learning rates: exponential decay from 1e-2 to 3e-5
-        python3 train.py --dropout_rate 0.2 --optimizer adam \
-                         --batch_size 64 --iter_size 1 \
+        python3 train.py --dropout_rate 0.2 \
+                         --optimizer adam --batch_size 64 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 \
                          --lr_decay 0.9077202433980235 \
                          --weight_decay 1e-4 --epochs 60 \

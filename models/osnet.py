@@ -1,8 +1,8 @@
 """OSNet (224x224) model for Keras.
 
 Reference:
-    * https://arxiv.org/abs/1905.00953
-    * https://github.com/KaiyangZhou/deep-person-reid/blob/master/torchreid/models/osnet.py
+    https://arxiv.org/abs/1905.00953
+    https://github.com/KaiyangZhou/deep-person-reid/blob/master/torchreid/models/osnet.py
 """
 
 
@@ -46,12 +46,8 @@ def conv2d_bn(x,
         padding=padding,
         use_bias=False)(x)
     x = layers.BatchNormalization(axis=bn_axis)(x)
-    if activation == 'relu':
-        x = layers.Activation('relu')(x)
-    elif activation is None:
-        pass
-    else:
-        raise ValueError('bad activation')
+    if activation is not None:
+        x = layers.Activation(activation)(x)
     return x
 
 
@@ -94,14 +90,15 @@ def get_aggregation_gate(in_filters, reduction=16):
     # Returns
         The AG op (a models.Sequential module).
     """
-    ag = models.Sequential()
-    ag.add(layers.GlobalAveragePooling2D())
-    ag.add(layers.Dense(in_filters // reduction, use_bias=False))
-    ag.add(layers.BatchNormalization())
-    ag.add(layers.Activation('relu'))
-    ag.add(layers.Dense(in_filters, activation='sigmoid'))
-    ag.add(layers.Reshape((1, 1, -1)))  # reshape as (H, W, C)
-    return ag
+    gate = models.Sequential()
+    gate.add(layers.GlobalAveragePooling2D())
+    gate.add(layers.Dense(in_filters // reduction, use_bias=False))
+    gate.add(layers.BatchNormalization())
+    gate.add(layers.Activation('relu'))
+    gate.add(layers.Dense(in_filters))
+    gate.add(layers.Activation('sigmoid'))
+    gate.add(layers.Reshape((1, 1, -1)))  # reshape as (H, W, C)
+    return gate
 
 
 def os_bottleneck(x,
@@ -119,7 +116,7 @@ def os_bottleneck(x,
     in_filters = x.shape[-1].value
     mid_filters = out_filters // bottleneck_reduction
     identity = x
-    x1 = conv2d_bn( x, mid_filters, kernel_size=(1, 1))
+    x1 = conv2d_bn(x, mid_filters, kernel_size=(1, 1))
 
     branch1 = light_conv3x3_bn(x1, mid_filters)
     branch2 = light_conv3x3_bn(x1, mid_filters)
@@ -133,16 +130,17 @@ def os_bottleneck(x,
     branch4 = light_conv3x3_bn(branch4, mid_filters)
 
     gate = get_aggregation_gate(mid_filters)
-    x2 = (branch1 * gate(branch1) +
-          branch2 * gate(branch2) +
-          branch3 * gate(branch3) +
-          branch4 * gate(branch4))
+    x2 = layers.Add()([
+        layers.Multiply()([branch1, gate(branch1)]),
+        layers.Multiply()([branch2, gate(branch2)]),
+        layers.Multiply()([branch3, gate(branch3)]),
+        layers.Multiply()([branch4, gate(branch4)])])
 
     x3 = conv2d_bn(x2, out_filters, kernel_size=(1, 1), activation=None)
     if in_filters != out_filters:
         identity = conv2d_bn(identity, out_filters, kernel_size=(1, 1), activation=None)
 
-    out = identity + x3  # residual connection
+    out = layers.Add()([identity, x3])  # residual connection
     out = layers.Activation('relu')(out)
     return out
 

@@ -84,7 +84,7 @@ In addition, the python code in this repository is for python3.  Make sure you h
    $ ./train_new.sh googlenet_bn
    ```
 
-   On my desktop PC with an NVIDIA GTX-1080 Ti GPU, it takes 7~8 days to train this model for 60 epochs.  And top-1 accuracy of the trained googelnet_bn model is over 0.7071.
+   On my desktop PC with an NVIDIA GTX-1080 Ti GPU, it takes 7~8 days to train this model for 60 epochs.  And top-1 accuracy of the trained googelnet_bn model is roughly 0.7091.
 
    NOTE: I do random rotation of training images, which actually slows down data ingestion quite a bit.  If you don't need random rotation as one of the data augmentation schemes, you could comment out [the code](https://github.com/jkjung-avt/keras_imagenet/blob/master/utils/image_processing.py#L354) to speed up training.
 
@@ -111,6 +111,19 @@ In addition, the python code in this repository is for python3.  Make sure you h
    ```
 
 8. For training other CNN models, check out `models/models.py`.  In addition to `mobilenet_v2`, `resnet50`, `googlenet_bn`, `inception_v2`, `efficientnet_b0`, `efficientnet_b1`, `efficientnet_b4` and `osnet`, you could implement your own Keras CNN models by extending the code.
+
+# Models trained with code in this repository
+
+|      Model                                                                                            |   Size   | Parameters | Top-1 Accuracy |
+| ----------------------------------------------------------------------------------------------------- | :------: | :--------: | :------------: |
+| [googlenet_bn](https://drive.google.com/file/d/1EW-ShppeSkaaqSDiaHIojWEil0jMR93k/view?usp=sharing)    |  82.9MB  |  7,020,392 |      0.7091    |
+| inception_v2                                                                                          | 132.2MB  | 11,214,888 |       --       |
+| mobilenet_v2                                                                                          |  42.0MB  |  3,538,984 |       --       |
+| resnet50                                                                                              |    --    |     --     |       --       |
+| efficientnet_b0                                                                                       |    --    |     --     |       --       |
+| efficientnet_b1                                                                                       |    --    |     --     |       --       |
+| efficientnet_b4                                                                                       |    --    |     --     |       --       |
+| osnet                                                                                                 |    --    |     --     |       --       |
 
 # Additional notes about MobileNetV2
 

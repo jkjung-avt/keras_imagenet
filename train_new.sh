@@ -44,12 +44,12 @@ case $1 in
                          --weight_decay 2e-4 --epochs 60 googlenet_bn
         ;;
     inception_v2 )
-        # Learning rates exp decay from 1e-2 to 1e-5, 60 epochs
+        # Learning rates exp decay from 1e-2 to 1e-5, 80 epochs
         python3 train.py --dropout_rate 0.4 \
                          --optimizer adam --batch_size 32 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 \
-                         --lr_decay 0.8895134973108234 \
-                         --weight_decay 2e-4 --epochs 60 inception_v2
+                         --lr_decay 0.9162739011886736 \
+                         --weight_decay 2e-4 --epochs 80 inception_v2
         ;;
     efficientnet_b0 )
         # Learning rates exp decay from 1e-2 to 1e-4, 60 epochs

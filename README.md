@@ -16,7 +16,7 @@ Otherwise, please refer to the following blog posts for some more implementation
 
 # Prerequisite
 
-The dataset and CNN models in this repository are built and trained using the 'keras' API within tensorflow.  I myself have tested the code with tensorflow 1.11.0 and 1.12.2.  My implementation of [the 'LookAhead' optimizer and 'iter_size' do **not** work for 'tensorflow.python.keras.optimizer_v2.OptimizerV2' (tensorflow-1.13.0+)](https://github.com/keras-team/keras/issues/3556).  I would recommend tensorflow-1.12.x if you'd like to use those 2 features of my code.
+The dataset and CNN models in this repository are built and trained using the 'keras' API within tensorflow.  I myself have tested the code with tensorflow 1.11.0 and 1.12.2.  My implementation of [the 'LookAhead' optimizer and 'iter_size' does **not** work for 'tensorflow.python.keras.optimizer_v2.OptimizerV2' (tensorflow-1.13.0+)](https://github.com/keras-team/keras/issues/3556).  I would recommend tensorflow-1.12.x if you'd like to use those 2 features of my code.
 
 In addition, the python code in this repository is for python3.  Make sure you have tensorflow and its dependencies working for python3.
 
@@ -78,7 +78,7 @@ In addition, the python code in this repository is for python3.  Make sure you h
 
 6. As an example, train a 'GoogLeNet_BN' (GoogLeNet with Batch Norms) model.
 
-   Take a peek at [train_new.sh](https://github.com/jkjung-avt/keras_imagenet/blob/master/train_new.sh) and [models/googlenet.py](https://github.com/jkjung-avt/keras_imagenet/blob/master/models/googlenet.py) before running it.  You could adjust the learning rate schedule, weight decay and epochs in the script to see if it produces a model with better accuracy.
+   You could take a peek at [train_new.sh](https://github.com/jkjung-avt/keras_imagenet/blob/master/train_new.sh) and [models/googlenet.py](https://github.com/jkjung-avt/keras_imagenet/blob/master/models/googlenet.py) before executing the training.  For example, you might adjust the learning rate schedule, weight decay and total training epochs in the script to see if it produces a model with better accuracy.
 
    ```shell
    $ ./train_new.sh googlenet_bn
@@ -86,7 +86,7 @@ In addition, the python code in this repository is for python3.  Make sure you h
 
    On my desktop PC with an NVIDIA GTX-1080 Ti GPU, it takes 7~8 days to train this model for 60 epochs.  And top-1 accuracy of the trained googelnet_bn model is roughly 0.7091.
 
-   NOTE: I do random rotation of training images, which actually slows down data ingestion quite a bit.  If you don't need random rotation as one of the data augmentation schemes, you could comment out [the code](https://github.com/jkjung-avt/keras_imagenet/blob/master/utils/image_processing.py#L354) to speed up training.
+   NOTE: I do random rotation of training images, which actually slows down data ingestion quite a bit.  If you don't need random rotation as one of the data augmentation schemes, you could comment out [the code](https://github.com/jkjung-avt/keras_imagenet/blob/master/utils/image_processing.py#L354) to further speed up training.
 
    For reference, here is a list of options for the `train.py` script which gets called inside `train_new.sh`:
 

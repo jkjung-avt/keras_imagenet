@@ -96,10 +96,9 @@ In addition, the python code in this repository is for python3.  Make sure you h
    * `--use_lookahead`: use 'LookAhead' optimizer.  Default is False.
    * `--batch_size`: batch size for both training and validation.
    * `--iter_size`: aggregate gradients before doing 1 weight update, i.e. effective_batch_size = batch_size * iter_size.
-   * `--lr_sched`: 'linear' or 'exp' (exponential) decay of learning rate per epoch.  Default is 'linear'.
-   * `--initial_lr`: initial learning rate.
-   * `--final_lr`: final learning rate (for 'linear' lr_sched only).
-   * `--lr_decay`: decaying factor for learning rate (for 'exp' lr_sched only).
+   * `--lr_sched`: 'linear' or 'exp' (exponential) decay of learning rates per epoch.  Default is 'linear'.
+   * `--initial_lr`: learning rate of the 1st epoch.
+   * `--final_lr`: learning rate of the last epoch.
    * `--weight_decay`: L2 regularization of weights in conv/dense layers.
    * `--epochs`: total number of training epochs.
 

@@ -18,7 +18,6 @@ from models.models import get_iter_size
 from models.models import get_lr_func
 from models.models import get_initial_lr
 from models.models import get_final_lr
-from models.models import get_lr_decay
 from models.models import get_weight_decay
 from models.models import get_optimizer
 from models.models import get_training_model
@@ -28,13 +27,13 @@ DESCRIPTION = """For example:
 $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
                    --dropout_rate 0.4 \
                    --optimizer    adam \
-                   --batch_size   64 \
+                   --batch_size   32 \
                    --iter_size    1 \
                    --lr_sched     exp \
                    --initial_lr   1e-2 \
-                   --lr_decay 0.8576958985908941 \
+                   --final_lr     1e-5 \
+                   --weight_decay 2e-4 \
                    --epochs       60 \
-                   --weight_decay 1e-4 \
                    googlenet_bn
 """
 SUPPORTED_MODELS = (
@@ -45,14 +44,13 @@ SUPPORTED_MODELS = (
 
 def train(model_name, dropout_rate, optim_name,
           use_lookahead, batch_size, iter_size,
-          lr_sched, initial_lr, final_lr, lr_decay,
+          lr_sched, initial_lr, final_lr,
           weight_decay, epochs, dataset_dir):
     """Prepare data and train the model."""
     batch_size   = get_batch_size(model_name, batch_size)
     iter_size    = get_iter_size(model_name, iter_size)
     initial_lr   = get_initial_lr(model_name, initial_lr)
     final_lr     = get_final_lr(model_name, final_lr)
-    lr_decay     = get_lr_decay(model_name, lr_decay)
     optimizer    = get_optimizer(model_name, optim_name, initial_lr)
     weight_decay = get_weight_decay(model_name, weight_decay)
 
@@ -61,7 +59,7 @@ def train(model_name, dropout_rate, optim_name,
     ds_valid = get_dataset(dataset_dir, 'validation', batch_size)
 
     # instantiate training callbacks
-    lrate = get_lr_func(epochs, lr_sched, initial_lr, final_lr, lr_decay)
+    lrate = get_lr_func(epochs, lr_sched, initial_lr, final_lr)
     save_name = model_name if not model_name.endswith('.h5') else \
                 os.path.split(model_name)[-1].split('.')[0].split('-')[0]
     model_ckpt = tf.keras.callbacks.ModelCheckpoint(
@@ -107,7 +105,6 @@ def main():
                         choices=['linear', 'exp'])
     parser.add_argument('--initial_lr', type=float, default=-1.)
     parser.add_argument('--final_lr', type=float, default=-1.)
-    parser.add_argument('--lr_decay', type=float, default=-1.)
     parser.add_argument('--weight_decay', type=float, default=-1.)
     parser.add_argument('--epochs', type=int, default=1,
                         help='total number of epochs for training [1]')
@@ -123,7 +120,7 @@ def main():
     config_keras_backend()
     train(args.model, args.dropout_rate, args.optimizer,
           args.use_lookahead, args.batch_size, args.iter_size,
-          args.lr_sched, args.initial_lr, args.final_lr, args.lr_decay,
+          args.lr_sched, args.initial_lr, args.final_lr,
           args.weight_decay, args.epochs, args.dataset_dir)
     clear_keras_session()
 

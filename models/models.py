@@ -95,12 +95,8 @@ def get_final_lr(model_name, value):
     return value if value > 0. else 3e-4
 
 
-def get_lr_decay(model_name, value):
-    return value if value > 0. else 1.0  # default is no decay
-
-
 def get_lr_func(total_epochs, lr_sched='linear',
-                initial_lr=3e-4, final_lr=0., lr_decay=1.):
+                initial_lr=1e-2, final_lr=1e-5):
     """Returns a learning decay function for training.
 
     2 types of lr_sched are supported: 'linear' or 'exp' (exponential).
@@ -114,6 +110,7 @@ def get_lr_func(total_epochs, lr_sched='linear',
 
     def exp_decay(epoch):
         """Decay LR exponentially for each epoch."""
+        lr_decay = (final_lr / initial_lr) ** (1. / (total_epochs - 1))
         lr = initial_lr * (lr_decay ** epoch)
         print('Epoch %d, lr = %f' % (epoch+1, lr))
         return lr

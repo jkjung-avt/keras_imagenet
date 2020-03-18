@@ -61,6 +61,12 @@ case $1 in
                          --lr_sched exp --initial_lr 1e-2 --final_lr 1e-4 \
                          --epochs 80 efficientnet_b4
         ;;
+    osnet )
+        python3 train.py --dropout_rate 0.2 \
+                         --optimizer adam --batch_size 32 --iter_size 1 \
+                         --lr_sched exp --initial_lr 1e-2 --final_lr 1e-5 \
+                         --epochs 60 osnet
+        ;;
     * )
         usage
         exit

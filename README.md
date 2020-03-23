@@ -118,15 +118,15 @@ In addition, the python code in this repository is for python3.  Make sure you h
 | [googlenet_bn](https://drive.google.com/open?id=1EW-ShppeSkaaqSDiaHIojWEil0jMR93k) |  82.9MB  |  7,020,392 |      0.7091    |
 | [inception_v2](https://drive.google.com/open?id=1yWIvHtvnPJIFcc7QMZ7aaW9nK0dbJ6z-) | 132.2MB  | 11,214,888 |      0.7234    |
 | mobilenet_v2                                                                       |  42.0MB  |  3,538,984 |       --       |
-| resnet50                                                                           |    --    |     --     |       --       |
-| efficientnet_b0                                                                    |    --    |     --     |       --       |
-| efficientnet_b1                                                                    |    --    |     --     |       --       |
-| efficientnet_b4                                                                    |    --    |     --     |       --       |
-| osnet                                                                              |    --    |     --     |       --       |
+| resnet50                                                                           | 300.8MB  | 25,636,712 |       --       |
+| efficientnet_b0                                                                    |    --    |  5,330,564 |       --       |
+| efficientnet_b1                                                                    |    --    |  7,856,232 |       --       |
+| efficientnet_b4                                                                    |    --    | 19,466,816 |       --       |
+| osnet                                                                              |    --    |  2,440,952 |       --       |
 
 # Additional notes about MobileNetV2
 
-For some reason, Keras has trouble loading a trained/saved MobileNetV2 model.  The load_model() call would fail with this error message:
+For some reason, Keras has trouble loading a trained/saved MobileNetV2 model.  The `load_model()` call would fail with this error message:
 
   `TypeError: '<' not supported between instances of 'dict' and 'float'`
 

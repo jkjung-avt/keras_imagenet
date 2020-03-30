@@ -113,16 +113,15 @@ In addition, the python code in this repository is for python3.  Make sure you h
 
 # Models trained with code in this repository
 
-|      Model                                                                         |   Size   | Parameters | Top-1 Accuracy |
-| -----------------------------------------------------------------------------------| :------: | :--------: | :------------: |
-| [googlenet_bn](https://drive.google.com/open?id=1EW-ShppeSkaaqSDiaHIojWEil0jMR93k) |  82.9MB  |  7,020,392 |      0.7091    |
-| [inception_v2](https://drive.google.com/open?id=1yWIvHtvnPJIFcc7QMZ7aaW9nK0dbJ6z-) | 132.2MB  | 11,214,888 |      0.7234    |
-| mobilenet_v2                                                                       |  42.0MB  |  3,538,984 |       --       |
-| resnet50                                                                           | 300.8MB  | 25,636,712 |       --       |
-| efficientnet_b0                                                                    |    --    |  5,330,564 |       --       |
-| efficientnet_b1                                                                    |    --    |  7,856,232 |       --       |
-| efficientnet_b4                                                                    |    --    | 19,466,816 |       --       |
-| osnet                                                                              |    --    |  2,440,952 |       --       |
+|      Model                                                                         |  Input  |   Size   | Parameters | Top-1 Accuracy |
+| -----------------------------------------------------------------------------------| :-----: | :------: | :--------: | :------------: |
+| [googlenet_bn](https://drive.google.com/open?id=1EW-ShppeSkaaqSDiaHIojWEil0jMR93k) | 224x224 |  82.9MB  |  7,020,392 |      0.7091    |
+| [inception_v2](https://drive.google.com/open?id=1yWIvHtvnPJIFcc7QMZ7aaW9nK0dbJ6z-) | 224x224 | 132.2MB  | 11,214,888 |      0.7234    |
+| mobilenet_v2                                                                       | 224x224 |  42.0MB  |  3,538,984 |       --       |
+| resnet50                                                                           | 224x224 | 300.8MB  | 25,636,712 |       --       |
+| efficientnet_b0                                                                    | 224x224 |  63.0MB  |  5,330,564 |       --       |
+| efficientnet_b1                                                                    | 224x224 |    --    |  7,856,232 |       --       |
+| osnet                                                                              | 224x224 |    --    |  2,440,952 |       --       |
 
 # Additional notes about MobileNetV2
 

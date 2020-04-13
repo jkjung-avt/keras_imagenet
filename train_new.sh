@@ -44,22 +44,10 @@ case $1 in
                          --epochs 80 inception_v2
         ;;
     efficientnet_b0 )
-        python3 train.py --dropout_rate 0.2 --weight_decay 1e-4 \
-                         --optimizer adam --batch_size 16 --iter_size 1 \
+        python3 train.py --dropout_rate 0.2 --weight_decay 3e-5 \
+                         --optimizer sgd --batch_size 16 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 --final_lr 1e-4 \
                          --epochs 60 efficientnet_b0
-        ;;
-    efficientnet_b1 )
-        python3 train.py --dropout_rate 0.2 --weight_decay 1e-4 \
-                         --optimizer adam --batch_size 16 --iter_size 1 \
-                         --lr_sched exp --initial_lr 1e-2 --final_lr 1e-4 \
-                         --epochs 60 efficientnet_b1
-        ;;
-    efficientnet_b4 )
-        python3 train.py --dropout_rate 0.2 --weight_decay 1e-4 \
-                         --optimizer adam --batch_size 16 --iter_size 1 \
-                         --lr_sched exp --initial_lr 1e-2 --final_lr 1e-4 \
-                         --epochs 80 efficientnet_b4
         ;;
     osnet )
         python3 train.py --dropout_rate 0.2 \

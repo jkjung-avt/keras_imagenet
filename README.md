@@ -117,7 +117,7 @@ In addition, the python code in this repository is for python3.  Make sure you h
 | -------------------------------------------------------------------------------------| :-----: | :------: | :--------: | :------------: |
 | [googlenet_bn](https://drive.google.com/open?id=1EW-ShppeSkaaqSDiaHIojWEil0jMR93k)   | 224x224 |  80.9MB  |  7,020,392 |      0.7091    |
 | [inception_v2](https://drive.google.com/open?id=1yWIvHtvnPJIFcc7QMZ7aaW9nK0dbJ6z-)   | 224x224 | 129.0MB  | 11,214,888 |      0.7234    |
-| mobilenet_v2                                                                         | 224x224 |  40.8MB  |  3,538,984 |       --       |
+| [mobilenet_v2](https://drive.google.com/open?id=1r8ze_nympA7dUaMZSzV2FEakVTq1nZTk)   | 224x224 |  40.8MB  |  3,538,984 |      0.7054    |
 | resnet50                                                                             | 224x224 |    --    | 25,636,712 |       --       |
 | [efficientnet_b0](https://drive.google.com/file/d/1RzgDS9mOxqCUy8mKd4fVF2F7swsC9JiE) | 224x224 |  41.1MB  |  5,330,564 |      0.7318    |
 | [osnet](https://drive.google.com/file/d/15UbUHqu613fOl-ESn2_BwK783rxsImB-)           | 224x224 |  29.5MB  |  2,440,952 |      0.6474    |

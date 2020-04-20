@@ -127,7 +127,7 @@ def get_weight_decay(model_name, value):
     return value if value >= 0. else 1e-5
 
 
-def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-1):
+def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-2):
     """get_optimizer
 
     Note:

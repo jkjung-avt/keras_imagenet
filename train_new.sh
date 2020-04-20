@@ -20,10 +20,10 @@ fi
 
 case $1 in
     mobilenet_v2 )
-        python3 train.py --dropout_rate 0.2 --weight_decay 1e-6 \
+        python3 train.py --dropout_rate 0.2 --weight_decay 3e-5 \
                          --optimizer adam --batch_size 64 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 --final_lr 1e-5 \
-                         --epochs 60 mobilenet_v2
+                         --epochs 80 mobilenet_v2
         ;;
     resnet50 )
         python3 train.py --dropout_rate 0.5 --weight_decay 2e-4 \

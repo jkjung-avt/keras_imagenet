@@ -230,3 +230,74 @@ def InceptionV2(include_top=False,
     model = models.Model(inputs, x, name='inception_v2')
 
     return model
+
+
+def InceptionV2X(include_top=False,
+                 weights=None,
+                 input_tensor=None,
+                 input_shape=None,
+                 pooling=None,
+                 classes=1000,
+                 **kwargs):
+    """Instantiates the InceptionV2X architecture.
+
+    This model differs from InceptionV2 by moving 2 inception modules
+    from 4x to 3x.
+
+    # Returns
+        A Keras model instance.
+    """
+    if weights is not None:
+        raise ValueError('weights is not currently supported')
+    if input_tensor is None:
+        if input_shape is None:
+            raise ValueError('neither input_tensor nor input_shape is given')
+        img_input = layers.Input(shape=input_shape)
+    else:
+        if not backend.is_keras_tensor(input_tensor):
+            img_input = layers.Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
+
+    x = conv2d_bn(img_input, 64, (7, 7), strides=(2, 2))  # 1a: 112x112x64
+
+    x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2),
+                            padding='same')(x)            # 2a: 56x56x64
+    x = conv2d_bn(x,  64, (1, 1))                         # 2b: 56x56x64
+    x = conv2d_bn(x, 192, (3, 3), strides=(2, 2))         # 2c: 28x28x192
+
+    x = inception(x,  (64,  (64,  64),  (64,  96),  32))  # 3a: 28x28x256
+    x = inception(x,  (64,  (64,  64),  (64,  96),  32))  # 3b: 28x28x256
+    x = inception(x,  (64,  (64,  96),  (64,  96),  64))  # 3c: 28x28x320
+    x = inception(x,  (64,  (64,  96),  (64,  96),  64))  # 3d: 28x28x320
+
+    x = inception_s2(x, ((128, 160), (64,  96)))          # 4a: 14x14x576
+    x = inception(x, (192,  (96, 128),  (96, 128), 128))  # 4b: 14x14x576
+    x = inception(x,  (96, (128, 192), (160, 192),  96))  # 4c: 14x14x576
+
+    x = inception_s2(x, ((128, 192), (192, 256)))         # 5a: 7x7x1024
+    x = inception(x, (352, (192, 320), (160, 224), 128))  # 5b: 7x7x1024
+    x = inception(x, (352, (192, 320), (192, 224), 128))  # 5c: 7x7x1024
+
+    if include_top:
+        # Classification block
+        if pooling == 'avg':
+            x = layers.GlobalAveragePooling2D(name='global_pool')(x)
+        elif pooling == 'max':
+            x = layers.GlobalMaxPooling2D(name='global_pool')(x)
+        else:
+            raise ValueError('bad spec of global pooling')
+        x = layers.Dropout(0.4)(x)
+        x = layers.Dense(classes, activation='softmax', name='predictions')(x)
+
+    # Ensure that the model takes into account
+    # any potential predecessors of `input_tensor`.
+    if input_tensor is not None:
+        inputs = keras_utils.get_source_inputs(input_tensor)
+    else:
+        inputs = img_input
+
+    # Create model.
+    model = models.Model(inputs, x, name='inception_v2')
+
+    return model

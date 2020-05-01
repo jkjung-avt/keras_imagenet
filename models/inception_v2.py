@@ -47,13 +47,10 @@ def conv2d_bn(x,
     else:
         bn_name = None
         conv_name = None
-    if backend.image_data_format() == 'channels_first':
-        bn_axis = 1
-    else:
-        bn_axis = 3
+    bn_axis = 1 if backend.image_data_format() == 'channels_first' else 3
     x = layers.Conv2D(
-        filters,
-        kernel_size,
+        filters=filters,
+        kernel_size=kernel_size,
         strides=strides,
         padding=padding,
         use_bias=False,
@@ -93,17 +90,14 @@ def inception(x, filters):
         pool_size=(3, 3), strides=(1, 1), padding='same')(x)
     branchpool = conv2d_bn(branchpool, filters[3], (1, 1))
 
-    if backend.image_data_format() == 'channels_first':
-        concat_axis = 1
-    else:
-        concat_axis = 3
+    concat_axis = 1 if backend.image_data_format() == 'channels_first' else 3
     x = layers.concatenate(
         [branch1x1, branch3x3, branch5x5, branchpool], axis=concat_axis)
     return x
 
 
 def inception_s2(x, filters):
-    """Utility function of the 'stride-2' inception module.
+    """Utility function to implement the 'stride-2' inception module.
 
     # Arguments
         x: input tensor.
@@ -113,7 +107,7 @@ def inception_s2(x, filters):
         Output tensor after applying the 'stride-2' inception.
     """
     if len(filters) != 2:
-        raise ValueError('filters should have 4 components')
+        raise ValueError('filters should have 2 components')
     if len(filters[0]) != 2 or len(filters[1]) != 2:
         raise ValueError('incorrect spec of filters')
 
@@ -128,10 +122,7 @@ def inception_s2(x, filters):
     branchpool = layers.MaxPooling2D(
         pool_size=(3, 3), strides=(2, 2), padding='same')(x)
 
-    if backend.image_data_format() == 'channels_first':
-        concat_axis = 1
-    else:
-        concat_axis = 3
+    concat_axis = 1 if backend.image_data_format() == 'channels_first' else 3
     x = layers.concatenate(
         [branch3x3, branch5x5, branchpool], axis=concat_axis)
     return x
@@ -193,14 +184,14 @@ def InceptionV2(include_top=False,
 
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2),
                             padding='same')(x)            # 3a: 28x28x192
-    x = inception(x,  (64,  (64,  64),  (64,  96),  32))  # 3b: 28x28x256
-    x = inception(x,  (64,  (64,  96),  (64,  96),  64))  # 3c: 28x28x320
+    x = inception(x, ( 64, ( 64,  64), ( 64,  96),  32))  # 3b: 28x28x256
+    x = inception(x, ( 64, ( 64,  96), ( 64,  96),  64))  # 3c: 28x28x320
 
     x = inception_s2(x, ((128, 160), (64,  96)))          # 4a: 14x14x576
-    x = inception(x, (224,  (64,  96),  (96, 128), 128))  # 4b: 14x14x576
-    x = inception(x, (192,  (96, 128),  (96, 128), 128))  # 4c: 14x14x576
+    x = inception(x, (224, ( 64,  96), ( 96, 128), 128))  # 4b: 14x14x576
+    x = inception(x, (192, ( 96, 128), ( 96, 128), 128))  # 4c: 14x14x576
     x = inception(x, (160, (128, 160), (128, 160),  96))  # 4d: 14x14x576
-    x = inception(x,  (96, (128, 192), (160, 192),  96))  # 4e: 14x14x576
+    x = inception(x, ( 96, (128, 192), (160, 192),  96))  # 4e: 14x14x576
 
     x = inception_s2(x, ((128, 192), (192, 256)))         # 5a: 7x7x1024
     x = inception(x, (352, (192, 320), (160, 224), 128))  # 5b: 7x7x1024
@@ -264,16 +255,17 @@ def InceptionV2X(include_top=False,
     x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2),
                             padding='same')(x)            # 2a: 56x56x64
     x = conv2d_bn(x,  64, (1, 1))                         # 2b: 56x56x64
-    x = conv2d_bn(x, 192, (3, 3), strides=(2, 2))         # 2c: 28x28x192
+    x = conv2d_bn(x, 128, (3, 3))                         # 2c: 56x56x128
 
-    x = inception(x,  (64,  (64,  64),  (64,  96),  32))  # 3a: 28x28x256
-    x = inception(x,  (64,  (64,  64),  (64,  96),  32))  # 3b: 28x28x256
-    x = inception(x,  (64,  (64,  96),  (64,  96),  64))  # 3c: 28x28x320
-    x = inception(x,  (64,  (64,  96),  (64,  96),  64))  # 3d: 28x28x320
+    x = conv2d_bn(x, 192, (3, 3), strides=(2, 2))         # 3a: 28x28x256
+    x = inception(x, ( 64, ( 64,  64), ( 64,  96),  32))  # 3b: 28x28x256
+    x = inception(x, ( 64, ( 64,  80), ( 64,  96),  48))  # 3c: 28x28x288
+    x = inception(x, ( 64, ( 64,  96), ( 64,  96),  64))  # 3d: 28x28x320
+    x = inception(x, ( 64, ( 64, 128), ( 64, 128),  64))  # 3e: 28x28x384
 
     x = inception_s2(x, ((128, 160), (64,  96)))          # 4a: 14x14x576
-    x = inception(x, (192,  (96, 128),  (96, 128), 128))  # 4b: 14x14x576
-    x = inception(x,  (96, (128, 192), (160, 192),  96))  # 4c: 14x14x576
+    x = inception(x, (192, ( 96, 128), ( 96, 128), 128))  # 4b: 14x14x576
+    x = inception(x, ( 96, (128, 192), (160, 192),  96))  # 4c: 14x14x576
 
     x = inception_s2(x, ((128, 192), (192, 256)))         # 5a: 7x7x1024
     x = inception(x, (352, (192, 320), (160, 224), 128))  # 5b: 7x7x1024
@@ -298,6 +290,6 @@ def InceptionV2X(include_top=False,
         inputs = img_input
 
     # Create model.
-    model = models.Model(inputs, x, name='inception_v2')
+    model = models.Model(inputs, x, name='inception_v2x')
 
     return model

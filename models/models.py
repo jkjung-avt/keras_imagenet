@@ -17,6 +17,7 @@ import tensorflow as tf
 from config import config
 from .googlenet import GoogLeNetBN
 from .inception_v2 import InceptionV2, InceptionV2X
+from .inception_mobilenet import InceptionMobileNet
 from .efficientnet import EfficientNetB0_224x224
 from .efficientnet import EfficientNetB1_224x224
 from .efficientnet import EfficientNetB4_224x224
@@ -164,6 +165,7 @@ def get_training_model(model_name, dropout_rate, optimizer, label_smoothing,
             'googlenet_bn': GoogLeNetBN,
             'inception_v2': InceptionV2,
             'inception_v2x': InceptionV2X,
+            'inception_mobilenet': InceptionMobileNet,
             'efficientnet_b0': EfficientNetB0_224x224,
             'efficientnet_b1': EfficientNetB1_224x224,
             'efficientnet_b4': EfficientNetB4_224x224,

@@ -148,7 +148,7 @@ def get_optimizer(model_name, optim_name, initial_lr, epsilon=1e-2):
         raise ValueError
 
 
-def get_training_model(model_name, dropout_rate, optimizer,
+def get_training_model(model_name, dropout_rate, optimizer, label_smoothing,
                        use_lookahead, iter_size, weight_decay):
     """Build the model to be trained."""
     if model_name.endswith('.h5'):
@@ -195,9 +195,10 @@ def get_training_model(model_name, dropout_rate, optimizer,
     for layer in model.layers:
         layer.trainable = True
 
+    smooth = 0.1 if label_smoothing else 0.
     model.compile(
         optimizer=optimizer,
-        loss='categorical_crossentropy',
+        loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=smooth),
         metrics=['accuracy'])
     print(model.summary())
 

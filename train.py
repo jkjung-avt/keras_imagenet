@@ -28,6 +28,7 @@ $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
                    --dropout_rate 0.4 \
                    --optimizer    adam \
                    --epsilon      1e-1 \
+                   --label_smoothing \
                    --batch_size   32 \
                    --iter_size    1 \
                    --lr_sched     exp \
@@ -44,7 +45,7 @@ SUPPORTED_MODELS = (
 
 
 def train(model_name, dropout_rate, optim_name, epsilon,
-          use_lookahead, batch_size, iter_size,
+          label_smoothing, use_lookahead, batch_size, iter_size,
           lr_sched, initial_lr, final_lr,
           weight_decay, epochs, dataset_dir):
     """Prepare data and train the model."""
@@ -75,6 +76,7 @@ def train(model_name, dropout_rate, optim_name, epsilon,
         model_name=model_name,
         dropout_rate=dropout_rate,
         optimizer=optimizer,
+        label_smoothing=label_smoothing,
         use_lookahead=use_lookahead,
         iter_size=iter_size,
         weight_decay=weight_decay)
@@ -100,6 +102,7 @@ def main():
     parser.add_argument('--optimizer', type=str, default='adam',
                         choices=['sgd', 'adam', 'rmsprop'])
     parser.add_argument('--epsilon', type=float, default=1e-1)
+    parser.add_argument('--label_smoothing', action='store_true')
     parser.add_argument('--use_lookahead', action='store_true')
     parser.add_argument('--batch_size', type=int, default=-1)
     parser.add_argument('--iter_size', type=int, default=-1)
@@ -121,7 +124,8 @@ def main():
     os.makedirs(config.LOG_DIR, exist_ok=True)
     config_keras_backend()
     train(args.model, args.dropout_rate, args.optimizer, args.epsilon,
-          args.use_lookahead, args.batch_size, args.iter_size,
+          args.label_smoothing, args.use_lookahead,
+          args.batch_size, args.iter_size,
           args.lr_sched, args.initial_lr, args.final_lr,
           args.weight_decay, args.epochs, args.dataset_dir)
     clear_keras_session()

@@ -246,14 +246,13 @@ def InceptionMobileNet(include_top=False,
             img_input = input_tensor
 
     x = _conv2d_bn(img_input, 32, (3, 3), strides=(2, 2),
-                   name='conv1a')                          # 1a: 112x112x32
+                   name='conv1a_s2')                       # 1a: 112x112x32
     x = _conv2d_bn(x, 32, (3, 3), name='conv1b')           # 1b: 112x112x32
     x = _conv2d_bn(x, 64, (3, 3), name='conv1c')           # 1c: 112x112x64
 
-    x = layers.MaxPooling2D(pool_size=(3, 3), strides=(2, 2), padding='same',
-                            name='pool2a')(x)              # 2a: 56x56x64
-    x = _conv2d_bn(x,  80, (1, 1), name='conv2b')          # 2b: 56x56x80
-    x = _conv2d_bn(x, 128, (3, 3), name='conv2c')          # 2c: 56x56x128
+    x = _conv2d_bn(x, 128, (3, 3), strides=(2, 2),
+                   name='conv2a_s2')                       # 2a: 56x56x128
+    x = _mixed(x,  ( 32,  32,  48,  16), name='mixed2b')   # 2b: 56x56x128
 
     x = _mixed_s2(x, (96, 32), name='mixed3a_s2')          # 3a: 28x28x256
     x = _mixed(x,  ( 64,  64,  96,  32), name='mixed3b')   # 3b: 28x28x256

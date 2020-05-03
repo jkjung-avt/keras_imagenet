@@ -35,7 +35,12 @@ def main():
         sys.exit('model_file is not a .h5')
     model = tf.keras.models.load_model(
         args.model_file,
+        compile=False,
         custom_objects={'AdamW': AdamW})
+    model.compile(
+        optimizer='sgd',
+        loss='categorical_crossentropy',
+        metrics=['accuracy'])
     ds_validation = get_dataset(
         args.dataset_dir, 'validation', args.batch_size)
     results = model.evaluate(

@@ -156,6 +156,7 @@ def get_training_model(model_name, dropout_rate, optimizer, label_smoothing,
         # load a saved model
         model = tf.keras.models.load_model(
             model_name,
+            compile=False,
             custom_objects={'AdamW': AdamW})
     else:
         # initialize the model from scratch

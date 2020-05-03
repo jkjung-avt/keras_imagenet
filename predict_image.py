@@ -15,6 +15,7 @@ import cv2
 import tensorflow as tf
 
 from utils.utils import config_keras_backend, clear_keras_session
+from models.adamw import AdamW
 
 
 def parse_args():
@@ -53,7 +54,10 @@ def main():
     config_keras_backend()
 
     # load the trained model
-    net = tf.keras.models.load_model(args.model)
+    net = tf.keras.models.load_model(
+        args.model,
+        compile=False,
+        custom_objects={'AdamW': AdamW})
 
     # load and preprocess the test image
     img = cv2.imread(args.jpg)

@@ -198,10 +198,14 @@ def get_training_model(model_name, dropout_rate, optimizer, label_smoothing,
     for layer in model.layers:
         layer.trainable = True
 
-    smooth = 0.1 if label_smoothing else 0.
+    if tf.__version__ >= '1.14':
+        smooth = 0.1 if label_smoothing else 0.
+        loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=smooth)
+    else:
+        loss = 'categorical_crossentropy'
     model.compile(
         optimizer=optimizer,
-        loss=tf.keras.losses.CategoricalCrossentropy(label_smoothing=smooth),
+        loss=loss,
         metrics=['accuracy'])
     print(model.summary())
 

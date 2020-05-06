@@ -202,6 +202,8 @@ def get_training_model(model_name, dropout_rate, optimizer, label_smoothing,
         smooth = 0.1 if label_smoothing else 0.
         loss = tf.keras.losses.CategoricalCrossentropy(label_smoothing=smooth)
     else:
+        tf.logging.warning('"--label_smoothing" not working for '
+                           'tensorflow-%s' % tf.__version__)
         loss = 'categorical_crossentropy'
     model.compile(
         optimizer=optimizer,

@@ -6,3 +6,4 @@ logs
 
 saves
 *.h5
+*.pb

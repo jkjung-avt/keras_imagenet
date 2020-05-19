@@ -7,3 +7,6 @@ logs
 saves
 *.h5
 *.pb
+*.onnx
+*.engine
+*.bin

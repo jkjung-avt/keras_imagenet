@@ -32,10 +32,10 @@ The following uses a trained tf.keras "googlenet_bn" model as example.
 2. Convert the .pb file to ONNX.
 
     ```shell
-    $ python -m tf2onnx.convert --input googlenet_bn.pb \
-                                --inputs input_1:0 \
-                                --outputs Logits/Softmax:0 \
-                                --output googlenet_bn.onnx
+    $ python3 -m tf2onnx.convert --input googlenet_bn.pb \
+                                 --inputs input_1:0 \
+                                 --outputs Logits/Softmax:0 \
+                                 --output googlenet_bn.onnx
     ```
 
 3. Use "trtexec" to convert ONNX to TensorRT and measure inference time.  NOTE: The "--explicitBatch" is specific to TensorRT 7.0+.

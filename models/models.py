@@ -104,18 +104,26 @@ def get_lr_func(total_epochs, lr_sched='linear',
     """
     def linear_decay(epoch):
         """Decay LR linearly for each epoch."""
-        ratio = max((total_epochs - epoch - 1.) / (total_epochs - 1.), 0.)
-        lr = final_lr + (initial_lr - final_lr) * ratio
-        print('Epoch %d, lr = %f' % (epoch+1, lr))
-        return lr
+        if total_epochs == 1:
+            return initial_lr
+        else:
+            ratio = max((total_epochs - epoch - 1.) / (total_epochs - 1.), 0.)
+            lr = final_lr + (initial_lr - final_lr) * ratio
+            print('Epoch %d, lr = %f' % (epoch+1, lr))
+            return lr
 
     def exp_decay(epoch):
         """Decay LR exponentially for each epoch."""
-        lr_decay = (final_lr / initial_lr) ** (1. / (total_epochs - 1))
-        lr = initial_lr * (lr_decay ** epoch)
-        print('Epoch %d, lr = %f' % (epoch+1, lr))
-        return lr
+        if total_epochs == 1:
+            return initial_lr
+        else:
+            lr_decay = (final_lr / initial_lr) ** (1. / (total_epochs - 1))
+            lr = initial_lr * (lr_decay ** epoch)
+            print('Epoch %d, lr = %f' % (epoch+1, lr))
+            return lr
 
+    if total_epochs < 1:
+        raise ValueError('bad total_epochs (%d)' % total_epochs)
     if lr_sched == 'linear':
         return tf.keras.callbacks.LearningRateScheduler(linear_decay)
     elif lr_sched == 'exp':

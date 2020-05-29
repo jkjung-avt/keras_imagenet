@@ -129,20 +129,16 @@ def _mixed(x, filters, name=None):
     """
     if len(filters) != 4:
         raise ValueError('filters should have 4 components')
-    if len(filters[1]) != 2:
-        raise ValueError('incorrect spec of filters')
 
     name1 = name + '_1x1' if name else None
     branch1x1 = _conv2d_bn(x, filters[0],
                            kernel_size=(1, 1),
                            name=name1)
 
-    name1 = name + '_3x3_1' if name else None
-    name2 = name + '_3x3_2' if name else None
-    branch3x3 = _conv2d_bn(x, filters[1][0], (1, 1),
-                           name=name1)
-    branch3x3 = _conv2d_bn(branch3x3, filters[1][1], (3, 3),
-                           name=name2)
+    name1 = name + '_3x3' if name else None
+    branch3x3 = _depthwise_conv2d_bn(x, filters[1],
+                                     kernel_size=(3, 3),
+                                     name=name1)
 
     name1 = name + '_5x5' if name else None
     branch5x5 = _depthwise_conv2d_bn(x, filters[2],
@@ -177,15 +173,12 @@ def _mixed_s2(x, filters, name=None):
     """
     if len(filters) != 2:
         raise ValueError('filters should have 2 components')
-    if len(filters[0]) != 2:
-        raise ValueError('incorrect spec of filters')
 
-    name1 = name + '_3x3_1' if name else None
-    name2 = name + '_3x3_2' if name else None
-    branch3x3 = _conv2d_bn(x, filters[0][0], (1, 1),
-                           name=name1)
-    branch3x3 = _conv2d_bn(branch3x3, filters[0][1], (3, 3), strides=(2, 2),
-                           name=name2)
+    name1 = name + '_3x3' if name else None
+    branch3x3 = _depthwise_conv2d_bn(x, filters[0],
+                                     kernel_size=(3, 3),
+                                     strides=(2, 2),
+                                     name=name1)
 
     name1 = name + '_5x5' if name else None
     branch5x5 = _depthwise_conv2d_bn(x, filters[1],
@@ -251,29 +244,27 @@ def InceptionMobileNet(include_top=False,
         else:
             img_input = input_tensor
 
-    x = _conv2d_bn(img_input, 32, (3, 3), strides=(2, 2),
-                   name='conv1a_s2')                         # 1a: 112x112x32
-    x = _conv2d_bn(x, 32, (3, 3), name='conv1b')             # 1b: 112x112x32
-    x = _conv2d_bn(x, 64, (3, 3), name='conv1c')             # 1c: 112x112x64
+    x = _conv2d_bn(img_input, 64, (7, 7), strides=(2, 2),
+                   name='conv1a_s2')                      # 1a: 112x112x64
 
     x = _conv2d_bn(x, 128, (3, 3), strides=(2, 2),
-                   name='conv2a_s2')                          # 2a: 56x56x128
-    x = _mixed(x, (32, (32, 32), 48, 16), name='mixed2b')     # 2b: 56x56x128
-    x = _mixed(x, (32, (32, 32), 48, 16), name='mixed2c')     # 2c: 56x56x128
+                   name='conv2a_s2')                      # 2a: 56x56x128
+    x = _mixed(x, ( 32,  32,  48,  16), name='mixed2b')   # 2b: 56x56x128
+    x = _mixed(x, ( 32,  32,  48,  16), name='mixed2c')   # 2c: 56x56x128
 
-    x = _mixed_s2(x, ((64, 64), 64), name='mixed3a_s2')       # 3a: 28x28x256
-    x = _mixed(x, (64, (64, 64), 96, 32), name='mixed3b')     # 3b: 28x28x256
-    x = _mixed(x, (64, (64, 64), 96, 32), name='mixed3c')     # 3c: 28x28x256
-    x = _mixed(x, (64, (64, 96), 96, 32), name='mixed3d')     # 3d: 28x28x256
+    x = _mixed_s2(x, (64, 64), name='mixed3a_s2')         # 3a: 28x28x256
+    x = _mixed(x, ( 64,  64,  96,  32), name='mixed3b')   # 3b: 28x28x256
+    x = _mixed(x, ( 64,  64,  96,  32), name='mixed3c')   # 3c: 28x28x256
+    x = _mixed(x, ( 64,  96,  96,  32), name='mixed3d')   # 3d: 28x28x256
 
-    x = _mixed_s2(x, ((96, 128), 128), name='mixed4a_s2')     # 4a: 14x14x512
-    x = _mixed(x, (128, (96, 128), 192, 64), name='mixed4b')  # 4b: 14x14x512
-    x = _mixed(x, (128, (96, 128), 192, 64), name='mixed4c')  # 4c: 14x14x512
-    x = _mixed(x, (128, (96, 128), 192, 64), name='mixed4d')  # 4d: 14x14x512
+    x = _mixed_s2(x, (128, 128), name='mixed4a_s2')       # 4a: 14x14x512
+    x = _mixed(x, (128, 128, 192,  64), name='mixed4b')   # 4b: 14x14x512
+    x = _mixed(x, (128, 128, 192,  64), name='mixed4c')   # 4c: 14x14x512
+    x = _mixed(x, (128, 128, 192,  64), name='mixed4d')   # 4d: 14x14x512
 
-    x = _mixed_s2(x, ((192, 256), 256), name='mixed5a_s2')     # 5a: 7x7x1024
-    x = _mixed(x, (256, (192, 256), 384, 128), name='mixed5b') # 5b: 7x7x1024
-    x = _mixed(x, (256, (192, 256), 384, 128), name='mixed5c') # 5c: 7x7x1024
+    x = _mixed_s2(x, (256, 256), name='mixed5a_s2')       # 5a: 7x7x1024
+    x = _mixed(x, (256, 256, 384, 128), name='mixed5b')   # 5b: 7x7x1024
+    x = _mixed(x, (256, 256, 384, 128), name='mixed5c')   # 5c: 7x7x1024
 
     if include_top:
         # Classification block

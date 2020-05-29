@@ -50,7 +50,7 @@ case $1 in
                          --epochs 80 inception_v2x
         ;;
     inception_mobilenet )
-        python3 train.py --dropout_rate 0.4 --weight_decay 3e-5 \
+        python3 train.py --dropout_rate 0.4 --weight_decay 2e-4 \
                          --optimizer adam --batch_size 64 --iter_size 1 \
                          --lr_sched exp --initial_lr 1e-2 --final_lr 1e-5 \
                          --epochs 80 inception_mobilenet

@@ -46,7 +46,6 @@ The following uses a trained tf.keras "googlenet_bn" model as example.
                          --fp16 \
                          --workspace=1024 \
                          --warmUp=2 \
-                         --iterations=1000 \
                          --dumpProfile \
                          --verbose \
                          --saveEngine=googlenet_bn.engine

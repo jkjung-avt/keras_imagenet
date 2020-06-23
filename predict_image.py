@@ -1,10 +1,18 @@
 """predict_image.py
 
-This script is for testing a trained Keras ImageNet model.
+This script is for testing a trained Keras ImageNet model.  The model
+could be one of the following 2 formats:
 
-Example usage:
-   $ python3 predict_image.py saves/googlenet_bn-model-final.h5 \
-                              sample.jpg
+    1. tf.keras model (.h5)
+    2. optimized TensorRT engine (.engine)
+
+Example usage #1:
+$ python3 predict_image.py saves/googlenet_bn-model-final.h5 \
+                           sample.jpg
+
+Example usage #2:
+$ python3 predict_image.py tensorrt/googlenet_bn.engine \
+                           sample.jpg
 """
 
 
@@ -12,10 +20,6 @@ import argparse
 
 import numpy as np
 import cv2
-import tensorflow as tf
-
-from utils.utils import config_keras_backend, clear_keras_session
-from models.adamw import AdamW
 
 
 def parse_args():
@@ -44,6 +48,55 @@ def preprocess(img):
     return img
 
 
+def infer_with_tf(img, model):
+    """Inference the image with TensorFlow model."""
+    import tensorflow as tf
+    from utils.utils import config_keras_backend, clear_keras_session
+    from models.adamw import AdamW
+
+    config_keras_backend()
+
+    # load the trained model
+    net = tf.keras.models.load_model(model, compile=False,
+                                     custom_objects={'AdamW': AdamW})
+    predictions = net.predict(img)[0]
+
+    clear_keras_session()
+
+    return predictions
+
+
+def infer_with_trt(img, model):
+    """Inference the image with TensorRT engine."""
+    import pycuda.autoinit
+    import pycuda.driver as cuda
+    import tensorrt as trt
+
+    TRT_LOGGER = trt.Logger(trt.Logger.INFO)
+    with open(model, 'rb') as f, trt.Runtime(TRT_LOGGER) as runtime:
+        engine = runtime.deserialize_cuda_engine(f.read())
+    host_inputs, cuda_inputs, host_outputs, cuda_outputs, bindings = [], [], [], [], []
+    for binding in engine:
+        size = trt.volume(engine.get_binding_shape(binding)) * engine.max_batch_size
+        host_mem = cuda.pagelocked_empty(size, np.float32)
+        cuda_mem = cuda.mem_alloc(host_mem.nbytes)
+        bindings.append(int(cuda_mem))
+        if engine.binding_is_input(binding):
+            host_inputs.append(host_mem)
+            cuda_inputs.append(cuda_mem)
+        else:
+            host_outputs.append(host_mem)
+            cuda_outputs.append(cuda_mem)
+    stream = cuda.Stream()
+    context = engine.create_execution_context()
+    np.copyto(host_inputs[0], img.ravel())
+    cuda.memcpy_htod_async(cuda_inputs[0], host_inputs[0], stream)
+    context.execute_async(bindings=bindings, stream_handle=stream.handle)
+    cuda.memcpy_dtoh_async(host_outputs[0], cuda_outputs[0], stream)
+    stream.synchronize()
+    return host_outputs[0]
+
+
 def main():
     args = parse_args()
 
@@ -51,27 +104,24 @@ def main():
     with open('data/synset_words.txt') as f:
         cls_list = sorted(f.read().splitlines())
 
-    config_keras_backend()
-
-    # load the trained model
-    net = tf.keras.models.load_model(
-        args.model,
-        compile=False,
-        custom_objects={'AdamW': AdamW})
-
     # load and preprocess the test image
     img = cv2.imread(args.jpg)
     if img is None:
         raise SystemExit('cannot load the test image: %s' % args.jpg)
     img = preprocess(img)
 
-    # predict and postprocess
-    pred = net.predict(img)[0]
-    top5_idx = pred.argsort()[::-1][:5]  # take the top 5 predictions
-    for i in top5_idx:
-        print('%5.2f   %s' % (pred[i], cls_list[i]))
+    # predict the image
+    if args.model.endswith('.h5'):
+        predictions = infer_with_tf(img, args.model)
+    elif args.model.endswith('.engine'):
+        predictions = infer_with_trt(img, args.model)
+    else:
+        raise SystemExit('ERROR: bad model')
 
-    clear_keras_session()
+    # postprocess
+    top5_idx = predictions.argsort()[::-1][:5]  # take the top 5 predictions
+    for i in top5_idx:
+        print('%5.2f   %s' % (predictions[i], cls_list[i]))
 
 
 if __name__ == '__main__':

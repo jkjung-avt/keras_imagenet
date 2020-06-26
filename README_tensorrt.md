@@ -1,7 +1,9 @@
 Optimize Trained Models With TensorRT
 =====================================
 
-This documents how I optimize trained tf.keras models with TensorRT and verify inference performance of the resulting TensorRT engine.  I've verified the following precedure works on both a x86_64 PC and the Jetson platforms.
+This article documents how I optimized my trained tf.keras models with TensorRT and verify inference performance of the resulting TensorRT engine.  I've verified the following precedure works on both a x86_64 PC and the Jetson platforms.
+
+Refer to my blog post for some additional details: [Applying TensorRT on My tf.keras ImageNet Models](https://jkjung-avt.github.io/trt-keras-imagenet/).
 
 # Reference:
 

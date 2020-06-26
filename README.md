@@ -7,12 +7,15 @@ This repository contains code I use to train Keras ImageNet (ILSVRC2012) image c
 
 **Highlight #2**: In addition to data augmentation (random color distortion, rotation, flipping and cropping, etc.), I also use various tricks as an attempt to achieve best accuracy for the trained image classification models.  More specifically, I implement "LookAhead" optimizer ([reference](https://arxiv.org/abs/1907.08610)), "iter_size" and "L2 regularization" for the Keras models, and have tried to use "AdamW" (Adam optimizer with decoupled weight decay).
 
+**Highlight #3:** I also develop code/documentation about how to optimize the trained tf.keras models with TensorRT.  Refer to [README_tensorrt.md](https://github.com/jkjung-avt/keras_imagenet/blob/master/README_tensorrt.md) and [Applying TensorRT on My tf.keras ImageNet Models](https://jkjung-avt.github.io/trt-keras-imagenet/) for details.
+
 I took most of the dataset preparation code from tensorflow [models/research/inception](https://github.com/tensorflow/models/tree/master/research/inception).  It was under Apache license as specified [here](https://github.com/tensorflow/models/blob/master/LICENSE).
 
 Otherwise, please refer to the following blog posts for some more implementation details about the code:
 
 * [Training Keras Models with TFRecords and The tf.data API](https://jkjung-avt.github.io/tfrecords-for-keras/)
 * [Displaying Images in TensorBoard](https://jkjung-avt.github.io/tensorboard-images/)
+* [Applying TensorRT on My tf.keras ImageNet Models](https://jkjung-avt.github.io/trt-keras-imagenet/)
 
 # Prerequisite
 

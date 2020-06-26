@@ -26,7 +26,7 @@ def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument('model',
-                        help='e.g. saves/googlenet_bn-model-final.h5')
+                        help='a tf.keras model or a TensorRT engine, e.g. saves/googlenet_bn-model-final.h5 or tensorrt/googlenet_bn.engine')
     parser.add_argument('jpg',
                         help='an image file to be predicted')
     args = parser.parse_args()
@@ -50,6 +50,8 @@ def preprocess(img):
 
 def infer_with_tf(img, model):
     """Inference the image with TensorFlow model."""
+    import os
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
     import tensorflow as tf
     from utils.utils import config_keras_backend, clear_keras_session
     from models.adamw import AdamW
@@ -66,6 +68,21 @@ def infer_with_tf(img, model):
     return predictions
 
 
+def init_trt_buffers(cuda, trt, engine):
+    """Initialize host buffers and cuda buffers for the engine."""
+    assert engine[0] == 'input_1:0'
+    assert engine.get_binding_shape(0)[1:] == (224, 224, 3)
+    size = trt.volume((1, 224, 224, 3)) * engine.max_batch_size
+    host_input = cuda.pagelocked_empty(size, np.float32)
+    cuda_input = cuda.mem_alloc(host_input.nbytes)
+    assert engine[1] == 'Logits/Softmax:0'
+    assert engine.get_binding_shape(1)[1:] == (1000,)
+    size = trt.volume((1, 1000)) * engine.max_batch_size
+    host_output = cuda.pagelocked_empty(size, np.float32)
+    cuda_output = cuda.mem_alloc(host_output.nbytes)
+    return host_input, cuda_input, host_output, cuda_output
+
+
 def infer_with_trt(img, model):
     """Inference the image with TensorRT engine."""
     import pycuda.autoinit
@@ -75,26 +92,21 @@ def infer_with_trt(img, model):
     TRT_LOGGER = trt.Logger(trt.Logger.INFO)
     with open(model, 'rb') as f, trt.Runtime(TRT_LOGGER) as runtime:
         engine = runtime.deserialize_cuda_engine(f.read())
-    host_inputs, cuda_inputs, host_outputs, cuda_outputs, bindings = [], [], [], [], []
-    for binding in engine:
-        size = trt.volume(engine.get_binding_shape(binding)) * engine.max_batch_size
-        host_mem = cuda.pagelocked_empty(size, np.float32)
-        cuda_mem = cuda.mem_alloc(host_mem.nbytes)
-        bindings.append(int(cuda_mem))
-        if engine.binding_is_input(binding):
-            host_inputs.append(host_mem)
-            cuda_inputs.append(cuda_mem)
-        else:
-            host_outputs.append(host_mem)
-            cuda_outputs.append(cuda_mem)
+    assert len(engine) == 2, 'ERROR: bad number of bindings'
+    host_input, cuda_input, host_output, cuda_output = init_trt_buffers(
+        cuda, trt, engine)
     stream = cuda.Stream()
     context = engine.create_execution_context()
-    np.copyto(host_inputs[0], img.ravel())
-    cuda.memcpy_htod_async(cuda_inputs[0], host_inputs[0], stream)
-    context.execute_async(bindings=bindings, stream_handle=stream.handle)
-    cuda.memcpy_dtoh_async(host_outputs[0], cuda_outputs[0], stream)
+    context.set_binding_shape(0, (1, 224, 224, 3))
+    np.copyto(host_input, img.ravel())
+    cuda.memcpy_htod_async(cuda_input, host_input, stream)
+    context.execute_async(
+        batch_size=1,
+        bindings=[int(cuda_input), int(cuda_output)],
+        stream_handle=stream.handle)
+    cuda.memcpy_dtoh_async(host_output, cuda_output, stream)
     stream.synchronize()
-    return host_outputs[0]
+    return host_output
 
 
 def main():

@@ -46,6 +46,11 @@ def build_engine(onnx, verbose=False):
                 for error in range(parser.num_errors):
                     print(parser.get_error(error))
                 return None
+        if trt.__version__[0] >= '7':
+            # set input to batch size 1
+            shape = list(network.get_input(0).shape)
+            shape[0] = 1
+            network.get_input(0).shape = shape
         return builder.build_cuda_engine(network)
 
 

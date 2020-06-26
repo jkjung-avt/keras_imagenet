@@ -139,7 +139,6 @@ The following uses a trained tf.keras "googlenet_bn" model as example.  (As stat
     ### Then run the TensorRT engine and compare
     $ python3 predict_image.py tensorrt/googlenet_bn.engine \
                                huskies.jpg
-    [TensorRT] WARNING: Explicit batch network detected and batch size specified, use enqueue without batch size instead.
     0.96   n03218198 dogsled, dog sled, dog sleigh
     0.03   n02109961 Eskimo dog, husky
     0.00   n02110185 Siberian husky

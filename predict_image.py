@@ -100,10 +100,12 @@ def infer_with_trt(img, model):
     context.set_binding_shape(0, (1, 224, 224, 3))
     np.copyto(host_input, img.ravel())
     cuda.memcpy_htod_async(cuda_input, host_input, stream)
-    context.execute_async(
-        batch_size=1,
-        bindings=[int(cuda_input), int(cuda_output)],
-        stream_handle=stream.handle)
+    if trt.__version__[0] >= '7':
+        context.execute_async_v2(bindings=[int(cuda_input), int(cuda_output)],
+                                 stream_handle=stream.handle)
+    else:
+        context.execute_async(bindings=[int(cuda_input), int(cuda_output)],
+                              stream_handle=stream.handle)
     cuda.memcpy_dtoh_async(host_output, cuda_output, stream)
     stream.synchronize()
     return host_output

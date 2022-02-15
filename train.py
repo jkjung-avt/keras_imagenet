@@ -81,6 +81,10 @@ def train(model_name, dropout_rate, optim_name, epsilon,
         use_lookahead=use_lookahead,
         iter_size=iter_size,
         weight_decay=weight_decay)
+
+    # print('buuuuuuuuuu:',ds_train)
+    # for zz in ds_train:
+    #     print('zzz',zz)
     model.fit(
         x=ds_train,
         steps_per_epoch=1281167 // batch_size,

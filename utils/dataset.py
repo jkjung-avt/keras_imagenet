@@ -23,21 +23,21 @@ def decode_jpeg(image_buffer, scope=None):
     Returns:
         3-D float Tensor with values ranging from [0, 1).
     """
-    with tf.name_scope(values=[image_buffer], name=scope,
-                       default_name='decode_jpeg'):
-        # Decode the string as an RGB JPEG.
-        # Note that the resulting image contains an unknown height
-        # and width that is set dynamically by decode_jpeg. In other
-        # words, the height and width of image is unknown at compile-i
-        # time.
-        image = tf.image.decode_jpeg(image_buffer, channels=3)
+    # with tf.name_scope(values=[image_buffer], name=scope,
+    #                    default_name='decode_jpeg'):
+    # Decode the string as an RGB JPEG.
+    # Note that the resulting image contains an unknown height
+    # and width that is set dynamically by decode_jpeg. In other
+    # words, the height and width of image is unknown at compile-i
+    # time.
+    image = tf.image.decode_jpeg(image_buffer, channels=3)
 
-        # After this point, all image pixels reside in [0,1)
-        # until the very end, when they're rescaled to (-1, 1).
-        # The various adjust_* ops all require this range for dtype
-        # float.
-        image = tf.image.convert_image_dtype(image, dtype=tf.float32)
-        return image
+    # After this point, all image pixels reside in [0,1)
+    # until the very end, when they're rescaled to (-1, 1).
+    # The various adjust_* ops all require this range for dtype
+    # float.
+    image = tf.image.convert_image_dtype(image, dtype=tf.float32)
+    return image
 
 
 def _parse_fn(example_serialized, is_training):
@@ -67,34 +67,55 @@ def _parse_fn(example_serialized, is_training):
         label: Tensor tf.int32 containing the label.
         text: Tensor tf.string containing the human-readable label.
     """
+    # feature_map = {
+    #     'image/encoded': tf.io.FixedLenFeature([], dtype=tf.string,
+    #                                         default_value=''),
+    #     'image/class/label': tf.io.FixedLenFeature([], dtype=tf.int64,
+    #                                             default_value=-1),
+    #     'image/class/text': tf.io.FixedLenFeature([], dtype=tf.string,
+    #                                            default_value=''),
+    # }
     feature_map = {
-        'image/encoded': tf.FixedLenFeature([], dtype=tf.string,
-                                            default_value=''),
-        'image/class/label': tf.FixedLenFeature([], dtype=tf.int64,
-                                                default_value=-1),
-        'image/class/text': tf.FixedLenFeature([], dtype=tf.string,
-                                               default_value=''),
+        'file_name': tf.io.FixedLenFeature([], dtype=tf.string,
+                                           default_value=''),
+        'image': tf.io.FixedLenFeature([], dtype=tf.string,
+                                       default_value=''),
+        'label': tf.io.FixedLenFeature([], dtype=tf.int64,
+                                       default_value=-1),
     }
-    parsed = tf.parse_single_example(example_serialized, feature_map)
-    image = decode_jpeg(parsed['image/encoded'])
+    parsed = tf.io.parse_single_example(example_serialized, feature_map)
+    image = decode_jpeg(parsed['image'])
     if config.DATA_AUGMENTATION:
         image = preprocess_image(image, 224, 224, is_training=is_training)
     else:
         image = resize_and_rescale_image(image, 224, 224)
     # The label in the tfrecords is 1~1000 (0 not used).
     # So I think the minus 1 (of class label) is needed below.
-    label = tf.one_hot(parsed['image/class/label'] - 1, 1000, dtype=tf.float32)
+    label = tf.one_hot(parsed['label'] - 1, 1000, dtype=tf.float32)
     return (image, label)
 
 
 def get_dataset(tfrecords_dir, subset, batch_size):
     """Read TFRecords files and turn them into a TFRecordDataset."""
-    files = tf.matching_files(os.path.join(tfrecords_dir, '%s-*' % subset))
+    files = tf.io.matching_files(os.path.join(tfrecords_dir, '*-%s*' % subset))
+    print('banana:', subset)
+    print('nana',os.path.join(tfrecords_dir, '*-%s*' % subset))
+    print(files)
     shards = tf.data.Dataset.from_tensor_slices(files)
+    # print('-hhhhhhh:', shards)
+    # for ii,nana in enumerate(shards):
+    #     print('lulululu')
+    #     if ii>30:
+    #         break
+
     shards = shards.shuffle(tf.cast(tf.shape(files)[0], tf.int64))
     shards = shards.repeat()
     dataset = shards.interleave(tf.data.TFRecordDataset, cycle_length=4)
     dataset = dataset.shuffle(buffer_size=8192)
+    # for ii,nana in enumerate(dataset):
+    #     print('vuvuvuvuvuvuvuvu')
+    #     if ii>30:
+    #         break
     parser = partial(
         _parse_fn, is_training=True if subset == 'train' else False)
     dataset = dataset.apply(
@@ -102,5 +123,15 @@ def get_dataset(tfrecords_dir, subset, batch_size):
             map_func=parser,
             batch_size=batch_size,
             num_parallel_calls=config.NUM_DATA_WORKERS))
+    # print('pre - - -  - zzzzzz')
+    # for ii,nana in enumerate(dataset):
+    #     print('zzzzzzzzzzzzzzzz')
+    #     if ii>30:
+    #         break
     dataset = dataset.prefetch(batch_size)
+    # print('pre - - -  - quwa')
+    # for ii,nana in enumerate(dataset):
+    #     print('quwawawawawawa')
+    #     if ii>30:
+    #         break
     return dataset

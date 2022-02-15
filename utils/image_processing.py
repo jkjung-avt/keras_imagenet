@@ -30,7 +30,7 @@ import math
 import random
 
 import tensorflow as tf
-
+import tensorflow_addons as tfa
 from tensorflow.python.ops import control_flow_ops
 
 
@@ -52,15 +52,15 @@ def _smallest_size_at_least(height, width, smallest_side):
   """
   smallest_side = tf.convert_to_tensor(smallest_side, dtype=tf.int32)
 
-  height = tf.to_float(height)
-  width = tf.to_float(width)
-  smallest_side = tf.to_float(smallest_side)
+  height = tf.cast(height,tf.float32)
+  width = tf.cast(width,tf.float32)
+  smallest_side = tf.cast(smallest_side,tf.float32)
 
   scale = tf.cond(tf.greater(height, width),
                   lambda: smallest_side / width,
                   lambda: smallest_side / height)
-  new_height = tf.to_int32(tf.rint(height * scale))
-  new_width = tf.to_int32(tf.rint(width * scale))
+  new_height = tf.cast(tf.math.rint(height * scale),tf.int32)
+  new_width = tf.cast(tf.math.rint(width * scale),tf.int32)
   return new_height, new_width
 
 
@@ -82,8 +82,8 @@ def _aspect_preserving_resize(image, smallest_side):
   width = shape[1]
   new_height, new_width = _smallest_size_at_least(height, width, smallest_side)
   image = tf.expand_dims(image, 0)
-  resized_image = tf.image.resize_bilinear(image, [new_height, new_width],
-                                           align_corners=False)
+  resized_image = tf.image.resize(image, [new_height, new_width],method='bilinear')
+                                         #  align_corners=False)
   resized_image = tf.squeeze(resized_image)
   resized_image.set_shape([None, None, 3])
   return resized_image
@@ -123,7 +123,7 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
           tf.greater_equal(original_shape[1], crop_width)),
       ['Crop size greater than the image size.'])
 
-  offsets = tf.to_int32(tf.stack([offset_height, offset_width, 0]))
+  offsets = tf.cast(tf.stack([offset_height, offset_width, 0]),tf.int32)
 
   # Use tf.slice instead of crop_to_bounding box as it accepts tensors to
   # define the crop size.
@@ -169,7 +169,7 @@ def apply_with_random_selector(x, func, num_cases):
     The result of func(x, sel), where func receives the value of the
     selector as a python integer, but sel is sampled dynamically.
   """
-  sel = tf.random_uniform([], maxval=num_cases, dtype=tf.int32)
+  sel = tf.random.uniform([], maxval=num_cases, dtype=tf.int32)
   # Pass the real x only to one of the func calls.
   return control_flow_ops.merge([
       func(control_flow_ops.switch(x, tf.equal(sel, case))[1], case)
@@ -194,7 +194,8 @@ def distort_color(image, color_ordering=0, fast_mode=True, scope=None):
   Raises:
     ValueError: if color_ordering not in [0, 3]
   """
-  with tf.name_scope(scope, 'distort_color', [image]):
+  if True:
+      #with tf.name_scope(scope):#, 'distort_color', [image]):
     if fast_mode:
       if color_ordering == 0:
         image = tf.image.random_brightness(image, max_delta=32. / 255.)
@@ -261,7 +262,8 @@ def distorted_bounding_box_crop(image,
   Returns:
     A tuple, a 3-D Tensor cropped_image and the distorted bbox
   """
-  with tf.name_scope(scope, 'distorted_bounding_box_crop', [image, bbox]):
+  if True:
+  # with tf.name_scope(scope): #, 'distorted_bounding_box_crop', [image, bbox]):
     # Each bounding box has shape [1, num_boxes, box coords] and
     # the coordinates are ordered [ymin, xmin, ymax, xmax].
 
@@ -299,10 +301,11 @@ def resize_and_rescale_image(image, height, width,
     Returns:
         3-D float Tensor of prepared image.
     """
-    with tf.name_scope(values=[image, height, width], name=scope,
-                       default_name='resize_image'):
+    if True:
+    #with tf.name_scope(values=[image, height, width], name=scope,
+                   #    default_name='resize_image'):
         image = tf.expand_dims(image, 0)
-        image = tf.image.resize_bilinear(image, [height, width],
+        image = tfa.image.resize_bilinear(image, [height, width],
                                          align_corners=False)
         image = tf.squeeze(image, [0])
         if do_mean_subtraction:
@@ -346,12 +349,14 @@ def preprocess_for_train(image,
   Returns:
     3-D float Tensor of distorted image used for training with range [-1, 1].
   """
-  with tf.name_scope(scope, 'distort_image', [image, height, width, bbox]):
+  if True:
+  # with tf.name_scope(scope, 'distort_image', [image, height, width, bbox]):
+
     assert image.dtype == tf.float32
     # random rotatation of image between -15 to 15 degrees with 0.75 prob
     angle = random.uniform(-max_angle, max_angle) \
             if random.random() < 0.75 else 0.
-    rotated_image = tf.contrib.image.rotate(image, math.radians(angle),
+    rotated_image = tfa.image.rotate(image, math.radians(angle),
                                             interpolation='BILINEAR')
     # random cropping
     distorted_image, distorted_bbox = distorted_bounding_box_crop(
@@ -372,7 +377,7 @@ def preprocess_for_train(image,
     num_resize_cases = 1 if fast_mode else 4
     distorted_image = apply_with_random_selector(
         distorted_image,
-        lambda x, method: tf.image.resize_images(x, [height, width], method),
+        lambda x, method: tf.image.resize(x, [height, width]), #todo , method),
         num_cases=num_resize_cases)
 
     #if add_image_summaries:
@@ -416,7 +421,7 @@ def preprocess_for_eval(image,
   Returns:
     3-D float Tensor of prepared image.
   """
-  with tf.name_scope(scope, 'eval_image', [image, height, width]):
+  if True: #with tf.name_scope(scope, 'eval_image', [image, height, width]):
     assert image.dtype == tf.float32
     #image = resize_and_rescale_image(image, 256, 256,
     #                                 do_mean_subtraction=False)

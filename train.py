@@ -7,6 +7,7 @@ This script is used to train the ImageNet models.
 import os
 import time
 import argparse
+import numpy as np
 
 import tensorflow as tf
 
@@ -22,7 +23,8 @@ from models.models import get_weight_decay
 from models.models import get_optimizer
 from models.models import get_training_model
 
-
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten
+from tensorflow.keras.models import Sequential
 DESCRIPTION = """For example:
 $ python3 train.py --dataset_dir  ${HOME}/data/ILSVRC2012/tfrecords \
                    --dropout_rate 0.4 \
@@ -98,6 +100,23 @@ def train(model_name, dropout_rate, optim_name, epsilon,
     # training finished
     model.save('{}/{}-model-final.h5'.format(config.SAVE_DIR, save_name))
 
+def test_fun(args):
+    test_model = Sequential([
+        Conv2D(17, 3, input_shape=(224, 224, 3)),
+        MaxPooling2D(pool_size=2),
+        # Flatten(),
+        # Dense(10, activation='softmax'),
+    ])
+
+    ds_train = get_dataset(args.dataset_dir, 'validation', args.batch_size,n_steps=args.n_steps,feature_learning=True,feature_net=test_model)
+    # ds_train = get_dataset(args.dataset_dir, 'train', args.batch_size,n_steps=args.n_steps,feature_learning=True,feature_net=test_model)
+    # ds_valid = get_dataset(args.dataset_dir, 'validation', args.batch_size)
+    print('-----------test results')
+    for ii,dd in enumerate(ds_train):
+        print('batch_shape x:{}  y:{}'.format(np.shape(dd[0]),np.shape(dd[1])))
+        if ii>1:
+            break
+
 
 def main():
     parser = argparse.ArgumentParser(description=DESCRIPTION)
@@ -109,6 +128,7 @@ def main():
     parser.add_argument('--epsilon', type=float, default=1e-1)
     parser.add_argument('--label_smoothing', action='store_true')
     parser.add_argument('--use_lookahead', action='store_true')
+    parser.add_argument('--testmode', action='store_true')
     parser.add_argument('--batch_size', type=int, default=-1)
     parser.add_argument('--iter_size', type=int, default=-1)
     parser.add_argument('--lr_sched', type=str, default='linear',
@@ -118,6 +138,11 @@ def main():
     parser.add_argument('--weight_decay', type=float, default=-1.)
     parser.add_argument('--epochs', type=int, default=1,
                         help='total number of epochs for training [1]')
+
+    parser.add_argument('--n_steps', type=int, default=-1)
+    parser.add_argument('--resolution', type=int, default= 224)
+
+
     parser.add_argument('model', type=str,
                         help=SUPPORTED_MODELS)
     args = parser.parse_args()
@@ -128,7 +153,10 @@ def main():
     os.makedirs(config.SAVE_DIR, exist_ok=True)
     os.makedirs(config.LOG_DIR, exist_ok=True)
     config_keras_backend()
-    train(args.model, args.dropout_rate, args.optimizer, args.epsilon,
+    if args.testmode:
+        test_fun(args)
+    else:
+        train(args.model, args.dropout_rate, args.optimizer, args.epsilon,
           args.label_smoothing, args.use_lookahead,
           args.batch_size, args.iter_size,
           args.lr_sched, args.initial_lr, args.final_lr,

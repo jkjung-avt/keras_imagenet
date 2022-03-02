@@ -89,7 +89,7 @@ def _aspect_preserving_resize(image, smallest_side):
   return resized_image
 
 
-def _crop(image, offset_height, offset_width, crop_height, crop_width):
+def _crop(image, offset_height, offset_width, crop_height, crop_width, resize=None):
   """Crops the given image using the provided offsets and sizes.
 
   Note that the method doesn't assume we know the input image size but it does
@@ -115,8 +115,10 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
       tf.equal(tf.rank(image), 3),
       ['Rank of image must be equal to 3.'])
   with tf.control_dependencies([rank_assertion]):
-    cropped_shape = tf.stack([crop_height, crop_width, original_shape[2]])
-
+      # if resize is None:
+        cropped_shape = tf.stack([crop_height, crop_width, original_shape[2]])
+      # else:
+      #   cropped_shape = tf.stack([resize[0], resize[1], original_shape[2]])
   size_assertion = tf.Assert(
       tf.logical_and(
           tf.greater_equal(original_shape[0], crop_height),
@@ -129,6 +131,13 @@ def _crop(image, offset_height, offset_width, crop_height, crop_width):
   # define the crop size.
   with tf.control_dependencies([size_assertion]):
     image = tf.slice(image, offsets, cropped_shape)
+
+  if resize is None:
+    cropped_shape = tf.stack([crop_height, crop_width, original_shape[2]])
+  else:
+    image = tf.image.resize(image, resize , method='bilinear')
+    cropped_shape = tf.stack([resize[0], resize[1], original_shape[2]])
+
   return tf.reshape(image, cropped_shape)
 
 
@@ -155,6 +164,43 @@ def _central_crop(image_list, crop_height, crop_width):
     outputs.append(_crop(image, offset_height, offset_width,
                          crop_height, crop_width))
   return outputs
+
+def _central_crop_with_offsets(image, high_res, low_res, offsets, n_steps):
+  """Performs central crops of the given image list.
+
+  Args:
+    image_list: a list of image tensors of the same dimension but possibly
+      varying channel.
+    crop_height: the height of the image following the crop.
+    crop_width: the width of the image following the crop.
+
+  Returns:
+    the list of cropped images.
+  """
+  low_res_frames = []
+  image_height = tf.shape(image)[0]
+  image_width = tf.shape(image)[1]
+
+  offset_height0 = (image_height - high_res) // 2
+  offset_width0 = (image_width - high_res) // 2
+
+  high_res_image = _crop(image, offset_height0, offset_width0,
+                       high_res, high_res)
+  # for offset in offsets:
+  #   frame = _crop(image, offset_height0 + offset[0], offset_width0 + offset[1],
+  #           high_res, high_res,resize=[low_res,low_res])
+  #   low_res_frames.append(frame)
+  for step in range(n_steps):
+        frame = _crop(image, offset_height0 + offsets[step,0], offset_width0 + offsets[step,1],
+                      high_res, high_res, resize=[low_res, low_res])
+        low_res_frames.append(frame)
+    # print('bum-------', offsets)
+    # print('bum-------', offset)
+  print('lenlen ---',len(low_res_frames))
+  print('lenlen2low ---',low_res_frames)
+  print('lenlen2high ---',high_res_image)
+  low_res_frames = tf.stack(low_res_frames)
+  return low_res_frames, high_res_image
 
 
 def apply_with_random_selector(x, func, num_cases):
@@ -406,6 +452,7 @@ def preprocess_for_train(image,
 def preprocess_for_eval(image,
                         height,
                         width,
+                        margin=0,
                         scope=None,
                         add_image_summaries=False):
   """Prepare one image for evaluation.
@@ -425,22 +472,63 @@ def preprocess_for_eval(image,
     assert image.dtype == tf.float32
     #image = resize_and_rescale_image(image, 256, 256,
     #                                 do_mean_subtraction=False)
-    image = _aspect_preserving_resize(image, max(height, width))
+    image = _aspect_preserving_resize(image, margin+max(height, width))
     image = _central_crop([image], height, width)[0]
+    frames = _central_crop([image], height, width)
     image.set_shape([height, width, 3])
-
+    frames.set_shape()
     #if add_image_summaries:
     #  tf.summary.image('validation_image', tf.expand_dims(image, 0))
 
     image = tf.subtract(image, 0.5)
     image = tf.multiply(image, 2.0)
-    return image
+    return image,frames
 
+
+def preprocess_for_eval_n_steps(image,
+                        high_res,
+                        low_res,
+                        margin=0,
+                        amp=0,
+                        n_steps=0,
+                        scope=None,
+                        add_image_summaries=False):
+  """Prepare one image for evaluation.
+
+  Args:
+    image: 3-D Tensor of image. If dtype is tf.float32 then the range should be
+      [0, 1], otherwise it would converted to tf.float32 assuming that the range
+      is [0, MAX], where MAX is largest positive representable number for
+      int(8/16/32) data type (see `tf.image.convert_image_dtype` for details).
+    height: integer
+    width: integer
+    scope: Optional scope for name_scope.
+  Returns:
+    3-D float Tensor of prepared image.
+  """
+  if True: #with tf.name_scope(scope, 'eval_image', [image, height, width]):
+    assert image.dtype == tf.float32
+    #image = resize_and_rescale_image(image, 256, 256,
+    #                                 do_mean_subtraction=False)
+    offsets = tf.random.uniform(shape=(n_steps,2), minval=-amp, maxval=amp+1, dtype=tf.int32)
+    image = _aspect_preserving_resize(image, margin+high_res)
+    low_res_frames, high_res_image = _central_crop_with_offsets(image, high_res, low_res,offsets, n_steps)
+    high_res_image.set_shape([high_res, high_res, 3])
+    low_res_frames.set_shape([n_steps,low_res, low_res, 3])
+
+    #if add_image_summaries:
+    #  tf.summary.image('validation_image', tf.expand_dims(image, 0))
+    def rescale(x):
+        x = tf.subtract(x, 0.5)
+        x = tf.multiply(x, 2.0)
+        return x
+
+    return rescale(low_res_frames),rescale(high_res_image)
 
 def preprocess_image(image,
                      height,
                      width,
-                     is_training=False):
+                     is_training=False, teacher_mode=False, **kwargs):
   """Pre-process one image for training or evaluation.
 
   Args:
@@ -450,14 +538,66 @@ def preprocess_image(image,
     is_training: Boolean. If true it would transform an image for train,
       otherwise it would transform it for evaluation.
     fast_mode: Optional boolean, if True avoids slower transformations.
+    teacher_mode: enforce no multistep, override n_steps
 
   Returns:
     3-D float Tensor containing an appropriately scaled image
   """
+  multistep = -1
+  if 'n_steps' in kwargs.keys() and not teacher_mode:
+      multistep = kwargs['n_steps']
+
   if is_training:
     bbox = tf.constant([0.0, 0.0, 1.0, 1.0],
                        dtype=tf.float32,
                        shape=[1, 1, 4])
-    return preprocess_for_train(image, height, width, bbox, fast_mode=True)
+
+    if multistep > 0:
+        preprocessed_frames = [preprocess_for_train(image, height, width, bbox, fast_mode=True) for ii in range(multistep)]
+    else:
+        preprocessed_image = preprocess_for_train(image, height, width, bbox, fast_mode=True)
   else:
-    return preprocess_for_eval(image, height, width)
+    if multistep > 0:
+        preprocessed_frames = [preprocess_for_eval(image, height, width) for ii in range(multistep)]
+    else:
+        preprocessed_image = preprocess_for_eval(image, height, width)
+
+  if multistep > 0:
+      preprocessed_image = tf.stack(preprocessed_frames)
+  return preprocessed_image
+  # old simple version
+  # if is_training:
+  #   bbox = tf.constant([0.0, 0.0, 1.0, 1.0],
+  #                      dtype=tf.float32,
+  #                      shape=[1, 1, 4])
+  #   return preprocess_for_train(image, height, width, bbox, fast_mode=True)
+  # else:
+  #   return preprocess_for_eval(image, height, width)
+
+
+def preprocess_image_drc(image,
+                     high_res,
+                     low_res,
+                     is_training=False, teacher_mode=False, amp=0, **kwargs):
+    """Pre-process one image for training or evaluation.
+
+    Args:
+    image: 3-D Tensor [height, width, channels] with the image.
+    height: integer, image expected height.
+    width: integer, image expected width.
+    is_training: Boolean. If true it would transform an image for train,
+      otherwise it would transform it for evaluation.
+    fast_mode: Optional boolean, if True avoids slower transformations.
+    teacher_mode: enforce no multistep, override n_steps
+
+    Returns:
+    4-D tensor of low resolution frames and a 3-D float Tensor containing an appropriately scaled image
+    """
+
+    low_res_frames, high_res_image = preprocess_for_eval_n_steps(image,
+                        high_res,
+                        low_res,
+                        margin=2*amp+2,
+                        amp=amp,
+                        n_steps=kwargs['n_steps'])
+    return low_res_frames, high_res_image

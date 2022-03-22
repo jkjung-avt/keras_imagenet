@@ -9,10 +9,10 @@ import tensorflow as tf
 
 def config_keras_backend():
     """Config tensorflow backend to use less GPU memory."""
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
-    session = tf.Session(config=config)
-    tf.keras.backend.set_session(session)
+    # session = tf.Session(config=config)
+    # tf.keras.backend.set_session(session)
 
 
 def clear_keras_session():

@@ -38,13 +38,13 @@ def _set_l2(model, weight_decay):
     """
     for layer in model.layers:
         if isinstance(layer, tf.keras.layers.DepthwiseConv2D):
-            layer.add_loss(
+            layer.add_loss(lambda:
                 tf.keras.regularizers.l2(weight_decay)(layer.depthwise_kernel))
         elif isinstance(layer, tf.keras.layers.Conv2D):
-            layer.add_loss(
+            layer.add_loss(lambda:
                 tf.keras.regularizers.l2(weight_decay)(layer.kernel))
         elif isinstance(layer, tf.keras.layers.Dense):
-            layer.add_loss(
+            layer.add_loss(lambda:
                 tf.keras.regularizers.l2(weight_decay)(layer.kernel))
         #elif isinstance(layer, tf.keras.layers.BatchNormalization):
         #    if layer.gamma is not None:
@@ -197,10 +197,10 @@ def get_training_model(model_name, dropout_rate, optimizer, label_smoothing,
 
     if weight_decay > 0.:
         _set_l2(model, weight_decay)
-    if iter_size > 1:
-        optimizer = convert_to_accum_optimizer(optimizer, iter_size)
-    if use_lookahead:
-        optimizer = convert_to_lookahead_optimizer(optimizer)
+    # if iter_size > 1:
+    #     optimizer = convert_to_accum_optimizer(optimizer, iter_size)
+    # if use_lookahead:
+    #     optimizer = convert_to_lookahead_optimizer(optimizer)
 
     # make sure all layers are set to be trainable
     for layer in model.layers:
